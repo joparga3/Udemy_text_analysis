@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Jose Parreno Garcia" />
+
+
+<title>Text analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<script src="site_libs/htmlwidgets-0.9/htmlwidgets.js"></script>
+<link href="site_libs/wordcloud2-0.0.1/wordcloud.css" rel="stylesheet" />
+<script src="site_libs/wordcloud2-0.0.1/wordcloud2-all.js"></script>
+<script src="site_libs/wordcloud2-0.0.1/hover.js"></script>
+<script src="site_libs/wordcloud2-binding-0.2.1/wordcloud2.js"></script>
+<script src="site_libs/d3-3.5.3/./d3.min.js"></script>
+<link href="site_libs/d3heatmapcore-0.0.0/heatmapcore.css" rel="stylesheet" />
+<script src="site_libs/d3heatmapcore-0.0.0/heatmapcore.js"></script>
+<script src="site_libs/d3-tip-0.6.6/index.js"></script>
+<script src="site_libs/d3heatmap-binding-0.6.1.2/d3heatmap.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Text Analytics</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Text Analytics</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Text analysis</h1>
+<h4 class="author"><em>Jose Parreno Garcia</em></h4>
+<h4 class="date"><em>February 2018</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#scraping-webpages-and-processing-texts"><span class="toc-section-number">1</span> Scraping webpages and processing texts</a><ul>
+<li><a href="#reading-text-files"><span class="toc-section-number">1.1</span> Reading text files</a></li>
+<li><a href="#rvest-package-for-html-code-in-a-webpage"><span class="toc-section-number">1.2</span> Rvest package for HTML code in a webpage</a></li>
+<li><a href="#example-selecting-all-text-from-page---not-selecting-contents-images-etc"><span class="toc-section-number">1.3</span> Example: selecting all text from page - not selecting contents, images, etc</a></li>
+</ul></li>
+<li><a href="#corpus-tdm-tf-idf-word-cloud"><span class="toc-section-number">2</span> Corpus, TDM, TF-IDF, Word cloud</a><ul>
+<li><a href="#corpus"><span class="toc-section-number">2.1</span> Corpus</a><ul>
+<li><a href="#cleaning-the-corpus"><span class="toc-section-number">2.1.1</span> Cleaning the corpus</a></li>
+</ul></li>
+<li><a href="#term-document-matrix"><span class="toc-section-number">2.2</span> Term Document Matrix</a></li>
+<li><a href="#tf---idf"><span class="toc-section-number">2.3</span> TF - IDF</a><ul>
+<li><a href="#wordcloud"><span class="toc-section-number">2.3.1</span> WordCloud</a></li>
+<li><a href="#wordcloud-type-1"><span class="toc-section-number">2.3.2</span> Wordcloud type 1</a></li>
+</ul></li>
+<li><a href="#wordcloud-type-2"><span class="toc-section-number">2.4</span> Wordcloud type 2</a></li>
+</ul></li>
+<li><a href="#document-similarity-cosine-similarity-and-latent-semantic-analysis"><span class="toc-section-number">3</span> Document similarity: Cosine similarity and Latent Semantic Analysis</a><ul>
+<li><a href="#cosine-similarity"><span class="toc-section-number">3.1</span> Cosine Similarity</a><ul>
+<li><a href="#approach-only-by-number-of-common-words"><span class="toc-section-number">3.1.1</span> Approach only by number of common words</a></li>
+<li><a href="#approach-with-cosine-similarity"><span class="toc-section-number">3.1.2</span> Approach with Cosine Similarity</a></li>
+</ul></li>
+<li><a href="#latent-semantic-analysis"><span class="toc-section-number">3.2</span> Latent Semantic Analysis</a></li>
+</ul></li>
+<li><a href="#extracting-topis-with-latent-dirichlet-allocation"><span class="toc-section-number">4</span> Extracting Topis with Latent Dirichlet Allocation</a></li>
+<li><a href="#sentiment-scoring-and-tidytext-and-syuzhet"><span class="toc-section-number">5</span> Sentiment scoring and tidytext and syuzhet</a><ul>
+<li><a href="#using-tidytext-for-sentiment"><span class="toc-section-number">5.1</span> Using tidytext for sentiment</a></li>
+<li><a href="#using-syuzhet-for-mood"><span class="toc-section-number">5.2</span> Using syuzhet for mood</a></li>
+</ul></li>
+<li><a href="#classifying-texts-with-rtexttools"><span class="toc-section-number">6</span> Classifying texts with RTextTools</a></li>
+</ul>
+</div>
+
+<style>
+body {
+text-align: justify}
+
+</style>
+<p><br></p>
+<pre class="r"><code>library(knitr)</code></pre>
+<p>In this blog we will explore various concepts in text mining:</p>
+<ul>
+<li>Scraping webpages and processing texts</li>
+<li>Corpus, TDM, TF-IDF, Word cloud</li>
+<li>Cosine similarity and Latent Semantic Analysis</li>
+<li>Extracting topics and Latent Dirichlet Allocation</li>
+<li>Sentiment scoring and tidytext and syuzhet</li>
+<li>Classifying texts with RTextTools</li>
+</ul>
+<p><br></p>
+<div id="scraping-webpages-and-processing-texts" class="section level1">
+<h1><span class="header-section-number">1</span> Scraping webpages and processing texts</h1>
+<div id="reading-text-files" class="section level2">
+<h2><span class="header-section-number">1.1</span> Reading text files</h2>
+<p>Text files are typically read using the <strong>readLines()</strong> function.</p>
+<pre class="r"><code># Each text is saved in a character vector
+text = readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/yoga.txt&quot;)</code></pre>
+<pre><code>## Warning in readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/yoga.txt&quot;): incomplete final line found on &#39;https://raw.githubusercontent.com/selva86/datasets/master/yoga.txt&#39;</code></pre>
+<pre class="r"><code>text[1:5]</code></pre>
+<pre><code>## [1] &quot;The ancient yogic discipline is far more than a fitness method for physical health or a psychological tool to achieve peace and happiness. &quot;                                              
+## [2] &quot;    Wellness of body and mind, often touted as the primary benefit of modern yoga practice, is merely a by-product of becoming a fully balanced and vibrantly alive being. &quot;              
+## [3] &quot;    The Sanskrit word &#39;yoga&#39; comes from the word &#39;yuj&#39; which means, &#39;to unite&#39;.&quot;                                                                                                          
+## [4] &quot;    Hence, yoga is the union of the individual with the whole of existence, also commonly referred to as &#39;self-realization&#39;, &#39;nirvana&#39;, &#39;mukti&#39;,  or &#39;enlightenment&#39;.&quot;                    
+## [5] &quot;    Yoga also refers to the inner technology that will lead one to this experience â&lt;U+0080&gt;&lt;U+0093&gt; a technology formulated from rigorous inner observation, by ancient yogis over thousands of years.&quot;</code></pre>
+</div>
+<div id="rvest-package-for-html-code-in-a-webpage" class="section level2">
+<h2><span class="header-section-number">1.2</span> Rvest package for HTML code in a webpage</h2>
+All webpages have a source HTML code behind it that you can view by right-clicking and viewing HTML source code. HTML is a semi-structured way of organising scripts, where you have tags that represent objects. Those tags can have also inner tags. So for example, in the image below you see there is a
+<head>
+and a
+<body>
+tag. Think of these as sections. Within
+<head>
+you would write all meta-data or meta-information, and with
+<body>
+<p>you would write the bit of script that generates the webpage content.</p>
+<p><img src="images/1.PNG" width="882" /></p>
+<p><img src="images/2.PNG" width="714" /></p>
+<p>It could be possible to read the HTML code that forms a webpage using the <strong>readLines()</strong> but it could be massively messy. Check it out just below:</p>
+<pre class="r"><code># Each text is saved in a character vector
+text = readLines(&quot;https://en.wikipedia.org/wiki/Yoga&quot;)
+head(text)</code></pre>
+<pre><code>## [1] &quot;&lt;!DOCTYPE html&gt;&quot;                                                                                                                                    
+## [2] &quot;&lt;html class=\&quot;client-nojs\&quot; lang=\&quot;en\&quot; dir=\&quot;ltr\&quot;&gt;&quot;                                                                                               
+## [3] &quot;&lt;head&gt;&quot;                                                                                                                                             
+## [4] &quot;&lt;meta charset=\&quot;UTF-8\&quot;/&gt;&quot;                                                                                                                          
+## [5] &quot;&lt;title&gt;Yoga - Wikipedia&lt;/title&gt;&quot;                                                                                                                    
+## [6] &quot;&lt;script&gt;document.documentElement.className = document.documentElement.className.replace( /(^|\\s)client-nojs(\\s|$)/, \&quot;$1client-js$2\&quot; );&lt;/script&gt;&quot;</code></pre>
+<p>The best way to approach this is using the <strong>Rvest</strong> package. To <strong>Rvest</strong> you can specify what element from the webpage you want to extract. To dont necessarily want all of the HTML code, just the one that represents a table, or a paragraph or something in the webpage. An easy way to look for the code that represents an object in the webpage is by opening the HTML source code, hovering over different elements until you find the one you are looking for and then copying the HTML code.</p>
+<p><img src="images/3.PNG" width="1387" /></p>
+<p>So</p>
+<ul>
+<li>On one side we have the page, where all the html code is saved as an XML object class</li>
+<li>Then we copied the select code to the selector variable. This represents a paragrah in the webpage</li>
+<li>We then extract the bit represented by the selector within the whole XML object class</li>
+</ul>
+<pre class="r"><code>library(dplyr)
+library(rvest)
+
+# Import page
+page = read_html(&quot;https://es.wikipedia.org/wiki/RStudio&quot;)
+page</code></pre>
+<pre><code>## {xml_document}
+## &lt;html class=&quot;client-nojs&quot; lang=&quot;es&quot; dir=&quot;ltr&quot;&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;\n&lt;meta charset=&quot;UTF-8&quot;&gt;\n&lt;title&gt;RStudio - Wikipedia, la enciclopedia libre&lt;/title&gt;\n&lt;script&gt;document.documentElement.className = document.documentElement.className.rep ...
+## [2] &lt;body class=&quot;mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-RStudio rootpage-RStudio skin-vector action-view&quot;&gt;\t\t&lt;div id=&quot;mw-page-base&quot; class=&quot;noprint&quot;&gt;&lt;/div&gt;\n\t\t&lt;div id=&quot;mw-head-base&quot; class=&quot;noprint&quot;&gt;&lt;/div&gt;\n\t\t&lt;div id=&quot; ...</code></pre>
+<pre class="r"><code># Import select
+selector = &quot;#mw-content-text &gt; div &gt; p:nth-child(2)&quot;
+
+# Using CSS selector
+txt = page %&gt;% html_node(css = selector) %&gt;% html_text()
+txt</code></pre>
+<pre><code>## [1] &quot;RStudio es un entorno de desarrollo integrado (IDE) para el lenguaje de programación R, dedicado a la computación estadística y gráficos. Incluye una consola, editor de sintaxis que apoya la ejecución de código, así como herramientas para el trazado, la depuración y la gestión del espacio de trabajo.&quot;</code></pre>
+</div>
+<div id="example-selecting-all-text-from-page---not-selecting-contents-images-etc" class="section level2">
+<h2><span class="header-section-number">1.3</span> Example: selecting all text from page - not selecting contents, images, etc</h2>
+<pre class="r"><code>library(dplyr)
+
+# Import page
+page = read_html(&quot;https://es.wikipedia.org/wiki/Valencia&quot;)
+
+# Extract info that are within the paragraph tags in the HTML code (denotes by &quot;p&quot;)
+# The only problem you can see if that there are some minor extra HTML codes and notations and things that we might want to get rid off if we only want the text
+txt = page %&gt;% html_nodes(&quot;p&quot;) %&gt;% html_text()
+head(txt, 1)</code></pre>
+<pre><code>## [1] &quot;Valencia (en valenciano y oficialmente València,[5]&lt;U+200B&gt; AFI: [va&#39;lensia])[6]&lt;U+200B&gt;es un municipio[7]&lt;U+200B&gt;y una ciudad de España, capital de la provincia homónima y de la Comunidad Valenciana. Anteriormente, Valencia fue también capital de la extinta comarca de la Huerta de Valencia, comarca que en 1989[8]&lt;U+200B&gt; se disgregó para formar las comarcas de la Huerta Norte, Huerta Sur, Huerta Oeste y ciudad de Valencia, quedando así constituida como la única ciudad-comarca de la Comunidad Valenciana.&quot;</code></pre>
+<pre class="r"><code># Cleaning text with regexp 
+# remove HTML code
+pattern = &quot;&lt;/?\\w+((\\s+\\w+(\\s*=\\s*(?:\&quot;.*?\&quot;|&#39;.*?&#39;|[^&#39;\&quot;&gt;\\s]+))?)+\\s*|\\s*)&quot;
+txt1 = stringr::str_replace_all(txt, pattern,&quot;&quot;)
+
+#  remove extra space between words
+txt1 = stringr::str_wrap(txt1)
+
+# remove citations
+txt1 = stringr::str_replace_all(txt1, &quot;\\[.*\\]&quot;, &quot;&quot;)
+
+head(txt1, 1)</code></pre>
+<pre><code>## [1] &quot;Valencia (en valenciano y oficialmente València,&lt;U+200B&gt;es un\nmunicipio&lt;U+200B&gt;y una ciudad de España, capital de la provincia homónima y de la\nComunidad Valenciana. Anteriormente, Valencia fue también capital de la extinta\ncomarca de la Huerta de Valencia, comarca que en 1989&lt;U+200B&gt; se disgregó para\nformar las comarcas de la Huerta Norte, Huerta Sur, Huerta Oeste y ciudad de\nValencia, quedando así constituida como la única ciudad-comarca de la Comunidad\nValenciana.&quot;</code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="corpus-tdm-tf-idf-word-cloud" class="section level1">
+<h1><span class="header-section-number">2</span> Corpus, TDM, TF-IDF, Word cloud</h1>
+<div id="corpus" class="section level2">
+<h2><span class="header-section-number">2.1</span> Corpus</h2>
+<p>A corpus is a collection of text documents. In comparison with the above where we worked with strings or character vectors, a corpus can be though of a library. Say you had 300 books, then a corpus will have an object for all of those 300 books. Then, we would be able to break down those individual elements in the corpus to sentences/words/etc.</p>
+<p>The example below:</p>
+<ul>
+<li>We read a text file that breaks the text into lines and saves it as a character vector</li>
+<li>Then we create a corpus using the vector (we could also load a directory full of files with <strong>Corpus(DirSource())</strong>).</li>
+<li>This corpus contains 372 “documents” -&gt; in this case, 372 lines. Each sentence in this case is treated as a document.</li>
+<li>If you want more details about each document (in this case sentence), you can always use the <strong>inspect()</strong> function.</li>
+<li>As you can see using <strong>inspect()</strong>, there is an element of metadata for each document. If you wish, you can edit this too.</li>
+</ul>
+<pre class="r"><code>library(tm)
+
+# Read text
+char_vec = readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/yoga_wiki.txt&quot;)
+
+# Create Corpus
+cp = Corpus(VectorSource(char_vec))
+cp</code></pre>
+<pre><code>## &lt;&lt;SimpleCorpus&gt;&gt;
+## Metadata:  corpus specific: 1, document level (indexed): 0
+## Content:  documents: 372</code></pre>
+<pre class="r"><code># Different ways of inspecting the document
+inspect(cp[[6]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 139
+## 
+## The Yoga Sutras of Patanjali date from the first half of the 1st millennium CE, but only gained prominence in the West in the 20th century.</code></pre>
+<pre class="r"><code>cp[[15]]$content</code></pre>
+<pre><code>## [1] &quot;By figurative extension from the yoking or harnessing of oxen or horses, the word took on broader meanings such as employment, use, application, performance (compare the figurative uses of to harness as in to put something to some use).&quot;</code></pre>
+<pre class="r"><code>as.character(cp[[15]])</code></pre>
+<pre><code>## [1] &quot;By figurative extension from the yoking or harnessing of oxen or horses, the word took on broader meanings such as employment, use, application, performance (compare the figurative uses of to harness as in to put something to some use).&quot;</code></pre>
+<div id="cleaning-the-corpus" class="section level3">
+<h3><span class="header-section-number">2.1.1</span> Cleaning the corpus</h3>
+<ul>
+<li>The <strong>tm()</strong> package offer a number of transformations that we could directly apply to the text. Examples in the code.</li>
+<li>Given that these transformations are nothing more than functions, we could also build our own transformers!</li>
+</ul>
+<pre class="r"><code>library(SnowballC)
+
+# Transformations in tm package
+getTransformations()</code></pre>
+<pre><code>## [1] &quot;removeNumbers&quot;     &quot;removePunctuation&quot; &quot;removeWords&quot;       &quot;stemDocument&quot;      &quot;stripWhitespace&quot;</code></pre>
+<pre class="r"><code># Removing html transformer
+pattern = &quot;&lt;/?\\w+((\\s+\\w+(\\s*=\\s*(?:\&quot;.*?\&quot;|&#39;.*?&#39;|[^&#39;\&quot;&gt;\\s]+))?)+\\s*|\\s*)&quot;
+rmHTML = function(x){gsub(pattern, &quot;&quot;, x)}
+
+# Applying transformations
+cp_nohtml = tm_map(cp, content_transformer(rmHTML))
+inspect(cp_nohtml[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 236
+## 
+## By figurative extension from the yoking or harnessing of oxen or horses, the word took on broader meanings such as employment, use, application, performance (compare the figurative uses of to harness as in to put something to some use).</code></pre>
+<pre class="r"><code># Removing punctuation
+cp_noPun = tm_map(cp_nohtml, content_transformer(removePunctuation))
+inspect(cp_noPun[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 229
+## 
+## By figurative extension from the yoking or harnessing of oxen or horses the word took on broader meanings such as employment use application performance compare the figurative uses of to harness as in to put something to some use</code></pre>
+<pre class="r"><code># All to lower case
+cp_lower = tm_map(cp_noPun, content_transformer(tolower))
+inspect(cp_lower[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 229
+## 
+## by figurative extension from the yoking or harnessing of oxen or horses the word took on broader meanings such as employment use application performance compare the figurative uses of to harness as in to put something to some use</code></pre>
+<pre class="r"><code># Removing stopwords
+tm::stopwords()</code></pre>
+<pre><code>##   [1] &quot;i&quot;          &quot;me&quot;         &quot;my&quot;         &quot;myself&quot;     &quot;we&quot;         &quot;our&quot;        &quot;ours&quot;       &quot;ourselves&quot;  &quot;you&quot;        &quot;your&quot;       &quot;yours&quot;      &quot;yourself&quot;   &quot;yourselves&quot; &quot;he&quot;         &quot;him&quot;        &quot;his&quot;        &quot;himself&quot;    &quot;she&quot;       
+##  [19] &quot;her&quot;        &quot;hers&quot;       &quot;herself&quot;    &quot;it&quot;         &quot;its&quot;        &quot;itself&quot;     &quot;they&quot;       &quot;them&quot;       &quot;their&quot;      &quot;theirs&quot;     &quot;themselves&quot; &quot;what&quot;       &quot;which&quot;      &quot;who&quot;        &quot;whom&quot;       &quot;this&quot;       &quot;that&quot;       &quot;these&quot;     
+##  [37] &quot;those&quot;      &quot;am&quot;         &quot;is&quot;         &quot;are&quot;        &quot;was&quot;        &quot;were&quot;       &quot;be&quot;         &quot;been&quot;       &quot;being&quot;      &quot;have&quot;       &quot;has&quot;        &quot;had&quot;        &quot;having&quot;     &quot;do&quot;         &quot;does&quot;       &quot;did&quot;        &quot;doing&quot;      &quot;would&quot;     
+##  [55] &quot;should&quot;     &quot;could&quot;      &quot;ought&quot;      &quot;i&#39;m&quot;        &quot;you&#39;re&quot;     &quot;he&#39;s&quot;       &quot;she&#39;s&quot;      &quot;it&#39;s&quot;       &quot;we&#39;re&quot;      &quot;they&#39;re&quot;    &quot;i&#39;ve&quot;       &quot;you&#39;ve&quot;     &quot;we&#39;ve&quot;      &quot;they&#39;ve&quot;    &quot;i&#39;d&quot;        &quot;you&#39;d&quot;      &quot;he&#39;d&quot;       &quot;she&#39;d&quot;     
+##  [73] &quot;we&#39;d&quot;       &quot;they&#39;d&quot;     &quot;i&#39;ll&quot;       &quot;you&#39;ll&quot;     &quot;he&#39;ll&quot;      &quot;she&#39;ll&quot;     &quot;we&#39;ll&quot;      &quot;they&#39;ll&quot;    &quot;isn&#39;t&quot;      &quot;aren&#39;t&quot;     &quot;wasn&#39;t&quot;     &quot;weren&#39;t&quot;    &quot;hasn&#39;t&quot;     &quot;haven&#39;t&quot;    &quot;hadn&#39;t&quot;     &quot;doesn&#39;t&quot;    &quot;don&#39;t&quot;      &quot;didn&#39;t&quot;    
+##  [91] &quot;won&#39;t&quot;      &quot;wouldn&#39;t&quot;   &quot;shan&#39;t&quot;     &quot;shouldn&#39;t&quot;  &quot;can&#39;t&quot;      &quot;cannot&quot;     &quot;couldn&#39;t&quot;   &quot;mustn&#39;t&quot;    &quot;let&#39;s&quot;      &quot;that&#39;s&quot;     &quot;who&#39;s&quot;      &quot;what&#39;s&quot;     &quot;here&#39;s&quot;     &quot;there&#39;s&quot;    &quot;when&#39;s&quot;     &quot;where&#39;s&quot;    &quot;why&#39;s&quot;      &quot;how&#39;s&quot;     
+## [109] &quot;a&quot;          &quot;an&quot;         &quot;the&quot;        &quot;and&quot;        &quot;but&quot;        &quot;if&quot;         &quot;or&quot;         &quot;because&quot;    &quot;as&quot;         &quot;until&quot;      &quot;while&quot;      &quot;of&quot;         &quot;at&quot;         &quot;by&quot;         &quot;for&quot;        &quot;with&quot;       &quot;about&quot;      &quot;against&quot;   
+## [127] &quot;between&quot;    &quot;into&quot;       &quot;through&quot;    &quot;during&quot;     &quot;before&quot;     &quot;after&quot;      &quot;above&quot;      &quot;below&quot;      &quot;to&quot;         &quot;from&quot;       &quot;up&quot;         &quot;down&quot;       &quot;in&quot;         &quot;out&quot;        &quot;on&quot;         &quot;off&quot;        &quot;over&quot;       &quot;under&quot;     
+## [145] &quot;again&quot;      &quot;further&quot;    &quot;then&quot;       &quot;once&quot;       &quot;here&quot;       &quot;there&quot;      &quot;when&quot;       &quot;where&quot;      &quot;why&quot;        &quot;how&quot;        &quot;all&quot;        &quot;any&quot;        &quot;both&quot;       &quot;each&quot;       &quot;few&quot;        &quot;more&quot;       &quot;most&quot;       &quot;other&quot;     
+## [163] &quot;some&quot;       &quot;such&quot;       &quot;no&quot;         &quot;nor&quot;        &quot;not&quot;        &quot;only&quot;       &quot;own&quot;        &quot;same&quot;       &quot;so&quot;         &quot;than&quot;       &quot;too&quot;        &quot;very&quot;</code></pre>
+<pre class="r"><code>cp_noStopwords = tm_map(cp_lower, content_transformer(removeWords), stopwords())
+inspect(cp_noStopwords[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 184
+## 
+##  figurative extension   yoking  harnessing  oxen  horses  word took  broader meanings   employment use application performance compare  figurative uses   harness    put something   use</code></pre>
+<pre class="r"><code># Removing whitespace
+cp_noSpace = tm_map(cp_noStopwords, content_transformer(stripWhitespace))
+inspect(cp_noSpace[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 167
+## 
+##  figurative extension yoking harnessing oxen horses word took broader meanings employment use application performance compare figurative uses harness put something use</code></pre>
+<pre class="r"><code># Trailing and leading spaces
+cp_clean = tm_map(cp_noSpace, content_transformer(trimws))
+inspect(cp_clean[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 166
+## 
+## figurative extension yoking harnessing oxen horses word took broader meanings employment use application performance compare figurative uses harness put something use</code></pre>
+<pre class="r"><code># Stemming
+cp_clean_stem = tm_map(cp_clean, stemDocument)
+inspect(cp_clean_stem[[15]])</code></pre>
+<pre><code>## &lt;&lt;PlainTextDocument&gt;&gt;
+## Metadata:  7
+## Content:  chars: 116
+## 
+## figur extens yoke har oxen hors word took broader mean employ use applic perform compar figur use har put someth use</code></pre>
+</div>
+</div>
+<div id="term-document-matrix" class="section level2">
+<h2><span class="header-section-number">2.2</span> Term Document Matrix</h2>
+<ul>
+<li>Once we have cleaned the text using some of the possible text transformations that <strong>tm</strong> package offers, we are ready to create the Corpus.</li>
+<li>The Corpus will hold in each “row”/“document”, the sentences we cleaned.</li>
+<li>The next thing we want to do is analyse the Corpus as a whole. One way to do that is creating a <strong>Term Document Matrix</strong>. This will create a row for every possible word in all the documents, a column for every document (in this case 3 documents), and then the count of how many times each word appears in each document.</li>
+<li>With this, we can then run different statistics like looking for the most frequent words.</li>
+<li>If you look at the matrix, you can figure out that the matrix is pretty much filled with 0s! That makes sense because words wont appear in all documents! We could clean a bit more this matrix by removing any Sparse terms, ie, remove words that very rarely appear across all documents. In fact, if you look at the summary of the new matrix, you will see that the <strong>min</strong> is 4, which means that we have removed terms that appear in less than 4 documents.</li>
+</ul>
+<pre class="r"><code># We are happy with the transformations. Let&#39;s finally create the Corpus
+# cp_complete = Corpus(VectorSource(cp_clean_stem))
+
+# Create term document matrix and find frequent words
+tdm = TermDocumentMatrix(cp_clean_stem)
+tdm</code></pre>
+<pre><code>## &lt;&lt;TermDocumentMatrix (terms: 1908, documents: 372)&gt;&gt;
+## Non-/sparse entries: 5074/704702
+## Sparsity           : 99%
+## Maximal term length: 22
+## Weighting          : term frequency (tf)</code></pre>
+<pre class="r"><code>m = as.matrix(tdm)
+m[1:5,1:20]</code></pre>
+<pre><code>##            Docs
+## Terms       1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+##   ancient   1 0 0 1 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0
+##   disciplin 1 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0
+##   group     1 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0
+##   india     1 0 0 1 0 0 0 1 0  0  0  0  0  0  0  0  0  0  0  0
+##   joÃ       1 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0  0  0  0</code></pre>
+<pre class="r"><code>dim(m)</code></pre>
+<pre><code>## [1] 1908  372</code></pre>
+<pre class="r"><code># Find frequent terms
+findFreqTerms(tdm, lowfreq = 10)</code></pre>
+<pre><code>##  [1] &quot;ancient&quot;    &quot;group&quot;      &quot;india&quot;      &quot;origin&quot;     &quot;physic&quot;     &quot;practic&quot;    &quot;spiritu&quot;    &quot;yoga&quot;       &quot;buddhism&quot;   &quot;goal&quot;       &quot;hinduism&quot;   &quot;jainism&quot;    &quot;school&quot;     &quot;hatha&quot;      &quot;ascet&quot;      &quot;bce&quot;        &quot;centuri&quot;    &quot;develop&quot;   
+## [19] &quot;indian&quot;     &quot;like&quot;       &quot;mention&quot;    &quot;movement&quot;   &quot;tradit&quot;     &quot;buddhist&quot;   &quot;describ&quot;    &quot;hindu&quot;      &quot;later&quot;      &quot;text&quot;       &quot;upanishad&quot;  &quot;first&quot;      &quot;patanjali&quot;  &quot;sutra&quot;      &quot;tantra&quot;     &quot;earli&quot;      &quot;exercis&quot;    &quot;system&quot;    
+## [37] &quot;medit&quot;      &quot;also&quot;       &quot;call&quot;       &quot;one&quot;        &quot;philosophi&quot; &quot;relat&quot;      &quot;samkhya&quot;    &quot;mani&quot;       &quot;studi&quot;      &quot;may&quot;        &quot;result&quot;     &quot;suggest&quot;    &quot;mean&quot;       &quot;sens&quot;       &quot;unit&quot;       &quot;use&quot;        &quot;word&quot;       &quot;found&quot;     
+## [55] &quot;can&quot;        &quot;take&quot;       &quot;term&quot;       &quot;accord&quot;     &quot;concentr&quot;   &quot;two&quot;        &quot;consid&quot;     &quot;state&quot;      &quot;form&quot;       &quot;philosoph&quot;  &quot;jain&quot;       &quot;includ&quot;     &quot;refer&quot;      &quot;work&quot;       &quot;bodi&quot;       &quot;mind&quot;       &quot;three&quot;      &quot;â&lt;U+0080&gt;&lt;U+009C&gt;&quot;       
+## [73] &quot;concept&quot;    &quot;self&quot;       &quot;postur&quot;     &quot;part&quot;       &quot;health&quot;     &quot;period&quot;     &quot;element&quot;    &quot;control&quot;    &quot;breath&quot;     &quot;discuss&quot;    &quot;day&quot;        &quot;christian&quot;</code></pre>
+<pre class="r"><code># Remove sparse terms -&gt; dimensions clearly reduced from the words terms
+tdm2 = removeSparseTerms(tdm, 0.99)
+m_2 = as.matrix(tdm2)
+dim(m_2)</code></pre>
+<pre><code>## [1] 306 372</code></pre>
+<pre class="r"><code>summary(rowSums(m_2))</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     4.0     5.0     6.0    10.2    10.0   353.0</code></pre>
+</div>
+<div id="tf---idf" class="section level2">
+<h2><span class="header-section-number">2.3</span> TF - IDF</h2>
+<p>We have seen above how to compute the Term Document Matrix.</p>
+<ul>
+<li>With this we could start doing analysis based on the counts of words overall, or the count of words per document. Being valuable, this is a very simple approach on how to analyse text.</li>
+<li>In addition, we did remove some sparse terms, but we can’t assure that just because they dont appear in many documents, they are not important. Maybe one of those sparse terms, appears multiple times in a single document, making it very important in that particular instance.</li>
+</ul>
+<p>A possible way to add another layer of processing to the TDM is by introducing the concept of <strong>TF-IDF -&gt; Term Frequency - Inverse Document Frequency</strong>.</p>
+<ul>
+<li>TF-IDF works with the assumption that rare words shoud be given much greater importance than common words. For example, if we hadn’t removed stop words in one of our preprocessing steps, probably the word “and” would appear multiple times in pretty much all documents. Does that mean that “and” is something important if we are to do analysis? I would say the answer is no.</li>
+<li>TF-IDF would down weight these common elements by multiplying the <em>frequency</em> term (TF) with the <em>inverse frequency</em> term (IDF)</li>
+<li>There are multiple forms of the TF-IDF methodology, so do check out different implementation formulas.</li>
+<li>Check out the output of m_3 in R. In this case, instead of only having the count of times a term appears in the document, we have the relative importance of that word compared to all documents using the <strong>weightTfIdf</strong> function.</li>
+</ul>
+<p><img src="images/4.PNG" width="1382" /></p>
+<pre class="r"><code># TF-DF
+tdm_w = weightTfIdf(tdm, normalize = FALSE)
+
+m_3 = as.matrix(tdm_w)
+
+m_3[1:5,1:10]</code></pre>
+<pre><code>##            Docs
+## Terms              1 2 3        4 5 6 7        8 9 10
+##   ancient   4.954196 0 0 4.954196 0 0 0 0.000000 0  0
+##   disciplin 6.954196 0 0 0.000000 0 0 0 0.000000 0  0
+##   group     5.217231 0 0 0.000000 0 0 0 0.000000 0  0
+##   india     4.838719 0 0 4.838719 0 0 0 4.838719 0  0
+##   joÃ       8.539159 0 0 0.000000 0 0 0 0.000000 0  0</code></pre>
+<pre class="r"><code>dim(m_3)</code></pre>
+<pre><code>## [1] 1908  372</code></pre>
+<div id="wordcloud" class="section level3">
+<h3><span class="header-section-number">2.3.1</span> WordCloud</h3>
+<p>A WordCloud is just a graphical representation of a term and a numeric vector. For example, if we were to build a word cloud with the initial TDM, words with highest frequency would appear bigger. If we are to apply it to the TF-IDF, then words with higher relative importance would appear bigger.</p>
+</div>
+<div id="wordcloud-type-1" class="section level3">
+<h3><span class="header-section-number">2.3.2</span> Wordcloud type 1</h3>
+<pre class="r"><code>library(wordcloud)
+
+# Create word cloud
+word.freq = sort(rowSums(m_3), decreasing = T)
+
+# color.palette
+pal = RColorBrewer::brewer.pal(8, &quot;Dark2&quot;)
+
+# Plot word cloud
+wordcloud(words = names(word.freq)
+          , freq = word.freq
+          , random.order = F
+          , colors = pal
+          , max.words = 70)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-81-1.png" /><!-- --></p>
+</div>
+</div>
+<div id="wordcloud-type-2" class="section level2">
+<h2><span class="header-section-number">2.4</span> Wordcloud type 2</h2>
+<pre class="r"><code>library(wordcloud2)
+
+# Word freq vect0r
+word.freq = sort(rowSums(m_3), decreasing = T)
+
+# Dataframe
+df = as.data.frame(word.freq)
+df$word = rownames(df)
+colnames(df) = c(&quot;freq&quot;,&quot;word&quot;)
+df = df[,c(&quot;word&quot;,&quot;freq&quot;)]
+
+# plot word cloud
+wordcloud2(head(df,30), color = pal)</code></pre>
+<div id="htmlwidget-d9c0d86f0072b7e01013" style="width:672px;height:672px;" class="wordcloud2 html-widget"></div>
+<script type="application/json" data-for="htmlwidget-d9c0d86f0072b7e01013">{"x":{"word":["yoga","practic","medit","centuri","school","sutra","state","also","tradit","text","upanishad","describ","buddhist","philosophi","patanjali","hatha","use","hindu","one","hinduism","bodi","exercis","mani","form","samkhya","bce","mean","postur","earli","studi"],"freq":[212.689867853228,178.613740598257,146.50703960108,144.814177097236,131.649251906578,129.058650025962,125.811528902985,112.600314680485,110.435334479414,108.968046464985,104.861611431977,103.645415510107,101.277868154666,101.277868154666,97.3825655333327,95.3773519315732,93.4856153670115,92.3587276661734,92.3587276661734,91.230510543244,91.230510543244,89.7539982343562,88.5618450406341,87.0836691549147,86.2440174110526,85.8246259532889,84.5822234272961,83.3808278789912,83.0154423836487,81.7048585999446],"fontFamily":"Segoe UI","fontWeight":"bold","color":["#1B9E77","#D95F02","#7570B3","#E7298A","#66A61E","#E6AB02","#A6761D","#666666"],"minSize":0,"weightFactor":0.84630265567805,"backgroundColor":"white","gridSize":0,"minRotation":-0.785398163397448,"maxRotation":0.785398163397448,"shuffle":true,"rotateRatio":0.4,"shape":"circle","ellipticity":0.65,"figBase64":null,"hover":null},"evals":[],"jsHooks":{"render":[{"code":"function(el,x){\n                        console.log(123);\n                        if(!iii){\n                          window.location.reload();\n                          iii = False;\n\n                        }\n  }","data":null}]}}</script>
+</div>
+</div>
+<div id="document-similarity-cosine-similarity-and-latent-semantic-analysis" class="section level1">
+<h1><span class="header-section-number">3</span> Document similarity: Cosine similarity and Latent Semantic Analysis</h1>
+<p>The previous section was all about text processing and we used the <strong>tm</strong> package for it. In this section we will look at how to group documents that are similar.</p>
+<div id="cosine-similarity" class="section level2">
+<h2><span class="header-section-number">3.1</span> Cosine Similarity</h2>
+<p>A possible way of matching similar documents is based on the number of common words between documents, but this has some draw backs. Cosine similarity solves some of these drawbacks. Let’s understand this with the example below:</p>
+<ul>
+<li>We have 3 documents based on 2 star cricket players (Sachin, Dhoni)</li>
+<li>Our aim is to quantitatively estimate which documents are more similar</li>
+</ul>
+<p><img src="images/5.PNG" width="1221" /></p>
+<div id="approach-only-by-number-of-common-words" class="section level3">
+<h3><span class="header-section-number">3.1.1</span> Approach only by number of common words</h3>
+<p>If we go only with the approach of number of common words, we could end up with the result shown below.</p>
+<ul>
+<li>In this case, the 2 largest documents will have the most common words: Dhoni = 10 + Cricket = 50 + Sachin = 10. The question is, are they really the most similar documents?</li>
+<li>The answer is no, because the smaller set contains, for example, many more times the word “Dhoni” than the Sachin-large-dataset, meaning that probably, the smaller set is much more representative or similar to the Dhoni-large-dataset.</li>
+<li>We can solve this drawback by introducing cosine similarity.</li>
+</ul>
+<p><img src="images/6.PNG" width="731" /></p>
+</div>
+<div id="approach-with-cosine-similarity" class="section level3">
+<h3><span class="header-section-number">3.1.2</span> Approach with Cosine Similarity</h3>
+<ul>
+<li>Imagine we project the documents in a X-dimensional space, in this case, let’s represent in a 3D because we are looking at 3 different words.</li>
+<li>Each document will be mapped as a vector corresponding to the number of times the each word (axis) appear in the doc.</li>
+<li>You can clearly see that the small set Dd is incredibly similar in terms of angle to DD.</li>
+<li>This means that we can calculate the COSINE of each document. The closer the documents are, the similar they are.</li>
+<li>We are not interested in the magnitude of the vector, only on the positioning of in the X-dimensional space.</li>
+</ul>
+<p><img src="images/7.PNG" width="724" /></p>
+<pre class="r"><code>library(tm)
+library(lsa)
+
+# Create corpus
+wiki_docs = Corpus(DirSource(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs&quot;))
+wiki_docs</code></pre>
+<pre><code>## &lt;&lt;SimpleCorpus&gt;&gt;
+## Metadata:  corpus specific: 1, document level (indexed): 0
+## Content:  documents: 3</code></pre>
+<pre class="r"><code># PREPROCESSING
+# Stopwords
+stpwords = readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&quot;)</code></pre>
+<pre><code>## Warning in readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&quot;): incomplete final line found on &#39;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&#39;</code></pre>
+<pre class="r"><code>wiki_docs = tm_map(wiki_docs, removeWords, stpwords)
+
+# Number
+wiki_docs = tm_map(wiki_docs, removeNumbers)
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, removePunctuation)
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, &quot;\n&quot;, &quot; &quot;)}))
+
+# TERM DOCUMENT MATRIX
+tdm_wiki = TermDocumentMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = FALSE))
+
+m = as.matrix(tdm_wiki)
+
+# COSINE SIMILARITY
+csn = lsa::cosine(m)
+csn</code></pre>
+<pre><code>##           1         2         3
+## 1 1.0000000 0.2109249 0.3383065
+## 2 0.2109249 1.0000000 0.5579038
+## 3 0.3383065 0.5579038 1.0000000</code></pre>
+</div>
+</div>
+<div id="latent-semantic-analysis" class="section level2">
+<h2><span class="header-section-number">3.2</span> Latent Semantic Analysis</h2>
+<p>Latent Semantic Analysis tries to uncover the latent relationships between documents based on co-ocurrence of words. So, if 2 documents have some meaningful words in common, there must be some common theme. LSA accomplishes this using singular value decomposition (SVD). To put this in simple words, SVD reduces the dimensions of the TDM by compressing the information into only a few columns (something similar to PCA). Compared to PCA, SVD provides 3 matrices as output:</p>
+<ul>
+<li>One for documents</li>
+<li>One for terms</li>
+<li>One to decide how many dimensions could be useful</li>
+<li>Lets look at an example with documents on political personalities and sports</li>
+</ul>
+<pre class="r"><code># File names
+n = list.files(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs1&quot;)
+
+# Create corpus
+wiki_docs = Corpus(DirSource(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs1&quot;))
+wiki_docs</code></pre>
+<pre><code>## &lt;&lt;SimpleCorpus&gt;&gt;
+## Metadata:  corpus specific: 1, document level (indexed): 0
+## Content:  documents: 15</code></pre>
+<pre class="r"><code># PREPROCESSING
+# Stopwords
+wiki_docs = tm_map(wiki_docs, content_transformer(removeWords), c(lsa::stopwords_en))
+
+# Number
+wiki_docs = tm_map(wiki_docs, content_transformer(removeNumbers))
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, content_transformer(removePunctuation))
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, &quot;\n&quot;, &quot; &quot;)}))
+
+# TERM DOCUMENT MATRIX
+tdm_wiki = TermDocumentMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = stpwords
+                                                        , weighting = weightTfIdf))
+
+# RUN LSA
+lsa_out = lsa::lsa(tdm_wiki, dims = lsa::dimcalc_share())
+
+# reduced information for the terms
+lsa_out$tk[1:5,]</code></pre>
+<pre><code>##                  [,1]         [,2]        [,3]       [,4]        [,5]       [,6]         [,7]
+## activity  -0.06467544 -0.001909094 -0.11302525 0.04345653 -0.01129958 0.07852077 -0.001253537
+## badminton -0.12935087 -0.003818188 -0.22605051 0.08691305 -0.02259915 0.15704155 -0.002507073
+## beach     -0.06467544 -0.001909094 -0.11302525 0.04345653 -0.01129958 0.07852077 -0.001253537
+## casual    -0.06467544 -0.001909094 -0.11302525 0.04345653 -0.01129958 0.07852077 -0.001253537
+## common    -0.03413345  0.001360822 -0.06290228 0.05282438  0.09075436 0.01806793 -0.001025462</code></pre>
+<pre class="r"><code># reduced information for the documents
+rownames(lsa_out$dk) = n
+lsa_out$dk</code></pre>
+<pre><code>##                             [,1]        [,2]          [,3]          [,4]         [,5]         [,6]         [,7]
+## badminton.txt       -0.454400307 -0.01229430 -0.7009930762  2.690320e-01 -0.067302046  0.466063442 -0.007007749
+## barack obama.txt    -0.001780404  0.09021344  0.0000844927 -7.797920e-03  0.004446972  0.005581615  0.002580365
+## baseball.txt        -0.706770121 -0.03486869  0.4527758734 -1.931288e-01  0.087059307  0.021854332  0.004685334
+## cricket.txt         -0.399045973 -0.02756417  0.2328384972 -1.193452e-01  0.089360703  0.201326071 -0.033620054
+## dosa.txt            -0.016500776  0.06882995  0.3086803075  6.873674e-01 -0.193113649  0.037745895 -0.203548937
+## idli.txt            -0.021877498  0.04658479  0.2546360695  5.225993e-01 -0.163198058  0.033878904  0.451781022
+## lee quan yew.txt    -0.011218662  0.13587637  0.0112760417 -6.193851e-05  0.007939648  0.002343413  0.015503465
+## narendra modi.txt   -0.006468885  0.23647608  0.0142931631  1.392566e-02 -0.009528147  0.010924166  0.018091424
+## noodles.txt         -0.016242719  0.01365240 -0.0579072758  1.508722e-01  0.541449573 -0.105311608  0.217512937
+## pasta.txt           -0.021074715  0.01102697 -0.0663825618  2.249923e-01  0.721572365 -0.140731611  0.139324092
+## pizza.txt           -0.010462636  0.01212683  0.0280110830  1.996417e-01  0.212245665 -0.079424991 -0.827499063
+## queen elizabeth.txt -0.002713202  0.01746681  0.0017620177  9.711771e-03 -0.001622573 -0.009687159  0.020751594
+## shinzo abe.txt      -0.019474396  0.95153905 -0.0110487484 -9.668074e-02  0.020188964  0.049025056 -0.010865665
+## table tennis.txt    -0.364094122  0.04556581 -0.2831537069  8.686765e-02 -0.237676693 -0.836263837  0.024385569
+## tipu sultan.txt     -0.008265170  0.01344655  0.0094191210 -3.582395e-03  0.004765702  0.002792771 -0.008057789</code></pre>
+<pre class="r"><code># information contributed by the dimensions
+lsa_out$sk</code></pre>
+<pre><code>## [1] 0.7038269 0.6451238 0.6213050 0.6201768 0.5966680 0.5946030 0.5600259</code></pre>
+<pre class="r"><code># Using TK and DK to cluster the documents
+
+# DOCS df
+docs_mat = lsa_out$dk[,c(1:2)]
+plotmat_docs_df = as.data.frame(docs_mat)
+colnames(plotmat_docs_df) = c(&quot;Dim1&quot;,&quot;Dim2&quot;)
+
+# KMEANS to cluster
+set.seed(100)
+clus = kmeans(plotmat_docs_df, 3)
+plotmat_docs_df$cluster = factor(clus$cluster)
+plotmat_docs_df</code></pre>
+<pre><code>##                             Dim1        Dim2 cluster
+## badminton.txt       -0.454400307 -0.01229430       2
+## barack obama.txt    -0.001780404  0.09021344       1
+## baseball.txt        -0.706770121 -0.03486869       2
+## cricket.txt         -0.399045973 -0.02756417       2
+## dosa.txt            -0.016500776  0.06882995       1
+## idli.txt            -0.021877498  0.04658479       1
+## lee quan yew.txt    -0.011218662  0.13587637       1
+## narendra modi.txt   -0.006468885  0.23647608       1
+## noodles.txt         -0.016242719  0.01365240       1
+## pasta.txt           -0.021074715  0.01102697       1
+## pizza.txt           -0.010462636  0.01212683       1
+## queen elizabeth.txt -0.002713202  0.01746681       1
+## shinzo abe.txt      -0.019474396  0.95153905       3
+## table tennis.txt    -0.364094122  0.04556581       2
+## tipu sultan.txt     -0.008265170  0.01344655       1</code></pre>
+<pre class="r"><code># Plot
+library(ggplot2)
+library(ggrepel)
+
+g = ggplot(plotmat_docs_df, aes(x = Dim1, y = Dim2))
+g = g + geom_point(size = 2, aes(color = cluster))
+g = g + ggrepel::geom_text_repel(aes(label = rownames(plotmat_docs_df))
+                                 , data = plotmat_docs_df, size = 3)
+g = g + theme_bw()
+g</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-88-1.png" /><!-- --></p>
+<p><br></p>
+</div>
+</div>
+<div id="extracting-topis-with-latent-dirichlet-allocation" class="section level1">
+<h1><span class="header-section-number">4</span> Extracting Topis with Latent Dirichlet Allocation</h1>
+<p>In the previous section, we managed to understand a couple of methods that could help us group documents together. The next step to take is to understand the <strong>topics</strong> that are being discussed in these documents/groups of documents.</p>
+<ul>
+<li>LDA is an unsupervised algorithm</li>
+<li>LDA is a method that can start related elements like “water”, “ice”, “blue” as a similar topic.</li>
+<li>It works best under the assumption that a document is a mixture of several topics and at the same time, each topic is a mixture of certain keywords</li>
+<li>LDA can then assign probabilities/proportions to each one document based on the topics.</li>
+<li>Example with documents on food, sports and personalities.</li>
+</ul>
+<pre class="r"><code># File names
+n = list.files(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs2&quot;)
+# n = cbind(n,seq(1, length(n), 1))
+
+# Create corpus
+wiki_docs = Corpus(DirSource(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs2&quot;))
+wiki_docs</code></pre>
+<pre><code>## &lt;&lt;SimpleCorpus&gt;&gt;
+## Metadata:  corpus specific: 1, document level (indexed): 0
+## Content:  documents: 17</code></pre>
+<pre class="r"><code># PREPROCESSING
+# To lower
+wiki_docs = tm_map(wiki_docs, content_transformer(tolower))
+
+# Stopwords
+stpwords = readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&quot;)</code></pre>
+<pre><code>## Warning in readLines(&quot;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&quot;): incomplete final line found on &#39;https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long&#39;</code></pre>
+<pre class="r"><code>wiki_docs = tm_map(wiki_docs, content_transformer(removeWords), c(lsa::stopwords_en, stpwords))
+
+# Number
+wiki_docs = tm_map(wiki_docs, content_transformer(removeNumbers))
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, content_transformer(removePunctuation))
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, &quot;\n&quot;, &quot; &quot;)}))
+
+# DOCUMENT TERM MATRIX
+dtm = DocumentTermMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = TRUE
+                                                        ))
+
+# LDA
+library(topicmodels)
+
+# Parameters
+burnin = 4000
+iter = 2000
+thin = 500
+seed = list(2003,5,63,100001,765)
+nstart = 5
+best = TRUE
+k = 4 #number topics
+
+# Run LDA
+res = LDA(dtm, k, method = &quot;Gibbs&quot;
+          , control = list(nstart = nstart
+                           , seed = seed
+                           , best = best
+                           , burnin = burnin
+                           , iter = iter
+                           , thin = thin))
+
+# Number of topics in each document
+res_topics = as.matrix(topics(res))
+res_topics</code></pre>
+<pre><code>##    [,1]
+## 1     1
+## 2     3
+## 3     1
+## 4     1
+## 5     1
+## 6     2
+## 7     2
+## 8     4
+## 9     3
+## 10    3
+## 11    2
+## 12    2
+## 13    2
+## 14    4
+## 15    3
+## 16    1
+## 17    4</code></pre>
+<pre class="r"><code>rownames(res_topics) = n
+
+# Top 30 terms
+res_terms = as.matrix(terms(res, 30))
+res_terms</code></pre>
+<pre><code>##       Topic 1         Topic 2       Topic 3      Topic 4      
+##  [1,] &quot;team&quot;          &quot;pasta&quot;       &quot;minister&quot;   &quot;lee&quot;        
+##  [2,] &quot;ball&quot;          &quot;shapes&quot;      &quot;abe&quot;        &quot;tipu&quot;       
+##  [3,] &quot;game&quot;          &quot;common&quot;      &quot;party&quot;      &quot;british&quot;    
+##  [4,] &quot;teams&quot;         &quot;pizza&quot;       &quot;law&quot;        &quot;war&quot;        
+##  [5,] &quot;played&quot;        &quot;noodles&quot;     &quot;obama&quot;      &quot;father&quot;     
+##  [6,] &quot;players&quot;       &quot;sauce&quot;       &quot;president&quot;  &quot;india&quot;      
+##  [7,] &quot;play&quot;          &quot;fresh&quot;       &quot;prime&quot;      &quot;east&quot;       
+##  [8,] &quot;cricket&quot;       &quot;served&quot;      &quot;born&quot;       &quot;elizabeth&quot;  
+##  [9,] &quot;popular&quot;       &quot;dried&quot;       &quot;election&quot;   &quot;national&quot;   
+## [10,] &quot;league&quot;        &quot;varieties&quot;   &quot;mandela&quot;    &quot;rule&quot;       
+## [11,] &quot;sport&quot;         &quot;dish&quot;        &quot;democratic&quot; &quot;queen&quot;      
+## [12,] &quot;women&quot;         &quot;dishes&quot;      &quot;south&quot;      &quot;mysore&quot;     
+## [13,] &quot;national&quot;      &quot;italy&quot;       &quot;government&quot; &quot;death&quot;      
+## [14,] &quot;batting&quot;       &quot;forms&quot;       &quot;african&quot;    &quot;central&quot;    
+## [15,] &quot;basketball&quot;    &quot;idli&quot;        &quot;control&quot;    &quot;third&quot;      
+## [16,] &quot;player&quot;        &quot;food&quot;        &quot;office&quot;     &quot;including&quot;  
+## [17,] &quot;runs&quot;          &quot;pastas&quot;      &quot;term&quot;       &quot;parliament&quot; 
+## [18,] &quot;table&quot;         &quot;prepared&quot;    &quot;served&quot;     &quot;yew&quot;        
+## [19,] &quot;court&quot;         &quot;simple&quot;      &quot;september&quot;  &quot;kingdom&quot;    
+## [20,] &quot;doubles&quot;       &quot;racquet&quot;     &quot;american&quot;   &quot;anglomysore&quot;
+## [21,] &quot;united&quot;        &quot;serving&quot;     &quot;campaign&quot;   &quot;sultan&quot;     
+## [22,] &quot;field&quot;         &quot;treaty&quot;      &quot;economic&quot;   &quot;service&quot;    
+## [23,] &quot;shuttlecock&quot;   &quot;divided&quot;     &quot;foreign&quot;    &quot;republican&quot; 
+## [24,] &quot;baseball&quot;      &quot;single&quot;      &quot;military&quot;   &quot;africa&quot;     
+## [25,] &quot;score&quot;         &quot;dosa&quot;        &quot;japan&quot;      &quot;britain&quot;    
+## [26,] &quot;batsman&quot;       &quot;traditional&quot; &quot;indian&quot;     &quot;governing&quot;  
+## [27,] &quot;international&quot; &quot;country&quot;     &quot;racial&quot;     &quot;kuan&quot;       
+## [28,] &quot;called&quot;        &quot;serve&quot;       &quot;â&lt;U+0080&gt;&lt;U+009C&gt;&quot;        &quot;public&quot;     
+## [29,] &quot;singles&quot;       &quot;cooked&quot;      &quot;modi&quot;       &quot;son&quot;        
+## [30,] &quot;top&quot;           &quot;cut&quot;         &quot;house&quot;      &quot;system&quot;</code></pre>
+<pre class="r"><code># Show topic probabilities
+res_topicProbs = as.data.frame(res@gamma)
+cbind(rownames(res_topics), res_topicProbs)</code></pre>
+<pre><code>##    rownames(res_topics)         V1         V2         V3         V4
+## 1         badminton.txt 0.52762431 0.19060773 0.10220994 0.17955801
+## 2      barack obama.txt 0.11492537 0.09701493 0.66119403 0.12686567
+## 3          baseball.txt 0.65099010 0.12128713 0.08663366 0.14108911
+## 4        basketball.txt 0.72244094 0.09251969 0.07677165 0.10826772
+## 5           cricket.txt 0.73529412 0.10990712 0.06037152 0.09442724
+## 6              dosa.txt 0.23026316 0.33552632 0.23026316 0.20394737
+## 7              idli.txt 0.21808511 0.36702128 0.23936170 0.17553191
+## 8      lee quan yew.txt 0.05749129 0.15505226 0.32229965 0.46515679
+## 9     narendra modi.txt 0.12068966 0.12758621 0.43793103 0.31379310
+## 10   nelson mandela.txt 0.09459459 0.16966967 0.59309309 0.14264264
+## 11          noodles.txt 0.11923077 0.57307692 0.15000000 0.15769231
+## 12            pasta.txt 0.06751825 0.79014599 0.07846715 0.06386861
+## 13            pizza.txt 0.18283582 0.53358209 0.14552239 0.13805970
+## 14  queen elizabeth.txt 0.12337662 0.22294372 0.16233766 0.49134199
+## 15       shinzo abe.txt 0.10542169 0.09939759 0.62349398 0.17168675
+## 16     table tennis.txt 0.60948905 0.12773723 0.14963504 0.11313869
+## 17      tipu sultan.txt 0.07226562 0.09179688 0.09960938 0.73632812</code></pre>
+<pre class="r"><code># Visualise using a heatmap
+library(d3heatmap)
+library(RColorBrewer)
+
+topic_probs = data.matrix(res_topicProbs)
+colnames(topic_probs) = c(&quot;Sports&quot;,&quot;Food&quot;,&quot;Politics&quot;,&quot;India-Politics&quot;)
+rownames(topic_probs) = rownames(res_topics)
+
+
+d3heatmap(topic_probs, colors = brewer.pal(9, &quot;Greens&quot;)
+          , scale = &quot;column&quot;, margins  = c(5,5)
+          , dendrogram = &quot;row&quot;, k_row = 5, cexRow = 0.75)</code></pre>
+<div id="htmlwidget-a8f4f45b2fcf8c71787a" style="width:672px;height:672px;" class="d3heatmap html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a8f4f45b2fcf8c71787a">{"x":{"rows":{"members":17,"height":0.969723056453256,"edgePar":{"col":""},"children":[{"members":12,"height":0.923856651673999,"edgePar":{"col":""},"children":[{"members":7,"height":0.829860764693584,"edgePar":{"col":""},"children":[{"members":4,"height":0.292841356477962,"edgePar":{"col":"#CC476B"},"children":[{"members":3,"height":0.102852821186675,"edgePar":{"col":"#CC476B"},"children":[{"members":2,"height":0.0593819838856729,"edgePar":{"col":"#CC476B"},"children":[{"members":1,"height":0,"label":"shinzo abe.txt","edgePar":{"col":"#CC476B"}},{"members":1,"height":0,"label":"barack obama.txt","edgePar":{"col":"#CC476B"}}]},{"members":1,"height":0,"label":"nelson mandela.txt","edgePar":{"col":"#CC476B"}}]},{"members":1,"height":0,"label":"narendra modi.txt","edgePar":{"col":"#CC476B"}}]},{"members":3,"height":0.356853436499996,"edgePar":{"col":"#917600"},"children":[{"members":2,"height":0.187679593679175,"edgePar":{"col":"#917600"},"children":[{"members":1,"height":0,"label":"queen elizabeth.txt","edgePar":{"col":"#917600"}},{"members":1,"height":0,"label":"lee quan yew.txt","edgePar":{"col":"#917600"}}]},{"members":1,"height":0,"label":"tipu sultan.txt","edgePar":{"col":"#917600"}}]}]},{"members":5,"height":0.242150861663912,"edgePar":{"col":"#009232"},"children":[{"members":3,"height":0.147468442219825,"edgePar":{"col":"#009232"},"children":[{"members":2,"height":0.0807114606884043,"edgePar":{"col":"#009232"},"children":[{"members":1,"height":0,"label":"table tennis.txt","edgePar":{"col":"#009232"}},{"members":1,"height":0,"label":"baseball.txt","edgePar":{"col":"#009232"}}]},{"members":1,"height":0,"label":"badminton.txt","edgePar":{"col":"#009232"}}]},{"members":2,"height":0.0304639149174573,"edgePar":{"col":"#009232"},"children":[{"members":1,"height":0,"label":"cricket.txt","edgePar":{"col":"#009232"}},{"members":1,"height":0,"label":"basketball.txt","edgePar":{"col":"#009232"}}]}]}]},{"members":5,"height":0.525194282465807,"edgePar":{"col":""},"children":[{"members":4,"height":0.278101038317583,"edgePar":{"col":"#008FB7"},"children":[{"members":2,"height":0.0775302051287213,"edgePar":{"col":"#008FB7"},"children":[{"members":1,"height":0,"label":"pizza.txt","edgePar":{"col":"#008FB7"}},{"members":1,"height":0,"label":"noodles.txt","edgePar":{"col":"#008FB7"}}]},{"members":2,"height":0.0450606147443628,"edgePar":{"col":"#008FB7"},"children":[{"members":1,"height":0,"label":"idli.txt","edgePar":{"col":"#008FB7"}},{"members":1,"height":0,"label":"dosa.txt","edgePar":{"col":"#008FB7"}}]}]},{"members":1,"height":0,"label":"pasta.txt","edgePar":{"col":"#A352D1"}}]}]},"cols":null,"matrix":{"data":["0.105","0.099","0.623","0.172","0.115","0.097","0.661","0.127","0.095","0.17","0.593","0.143","0.121","0.128","0.438","0.314","0.123","0.223","0.162","0.491","0.057","0.155","0.322","0.465","0.072","0.092","0.1","0.736","0.609","0.128","0.15","0.113","0.651","0.121","0.087","0.141","0.528","0.191","0.102","0.18","0.735","0.11","0.06","0.094","0.722","0.093","0.077","0.108","0.183","0.534","0.146","0.138","0.119","0.573","0.15","0.158","0.218","0.367","0.239","0.176","0.23","0.336","0.23","0.204","0.068","0.79","0.078","0.064"],"dim":[17,4],"rows":["shinzo abe.txt","barack obama.txt","nelson mandela.txt","narendra modi.txt","queen elizabeth.txt","lee quan yew.txt","tipu sultan.txt","table tennis.txt","baseball.txt","badminton.txt","cricket.txt","basketball.txt","pizza.txt","noodles.txt","idli.txt","dosa.txt","pasta.txt"],"cols":["Sports","Food","Politics","India-Politics"]},"image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAECAYAAABodtTSAAABC0lEQVQYlQXBvUsCYQDA4d/7esd5p92p+EFBOUjQBw2RUDTV6NJg/QMZtDcE4dYWRDQFCUE1NUdbDUG0Cm0WZBaBQXWngvjZ3fU84vy55Esh2bk8Y3d9jaQRQ5Uq26UTjgubhFSD747N0fUNe/k8hhLE8z0uyg+MRi1ymXlktfGJ021hmWEykQnagw63b2XS4ykszUQIQcKI8fVY4/T+Ds/3GLhDCtkVnio1AOR0PENASpKpKK+NDyJBk6n4GLbdpOf20JUgAkFyOU0xt4GpjWCoOq1+m0BA0ncHKE63iaHq1Ou/hBdC/HQcwGcpO8OL/Y6lhRl6f6wuzlGxq0gks4lJtooHXB3uowiFf5/6VvkaADppAAAAAElFTkSuQmCC","theme":null,"options":{"xaxis_height":80,"yaxis_width":120,"xaxis_font_size":10.5,"yaxis_font_size":null,"brush_color":"#0000FF","show_grid":true,"anim_duration":500}},"evals":[],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="sentiment-scoring-and-tidytext-and-syuzhet" class="section level1">
+<h1><span class="header-section-number">5</span> Sentiment scoring and tidytext and syuzhet</h1>
+<p>So far we have been able to do some basic text analysis and extraction/grouping of topics within a set of documents. This would be useful if we were to apply it to social media, but it would be even more useful to try to extract sentiment, in other words, trying to understand opinions.</p>
+<p>Let’s see an example where we classify the sentiment of phone transcripts.</p>
+<ul>
+<li>The main idea is to capture the positive and negative sentiment through the words.</li>
+<li>Words have a related sentiment score. For example, good may have a score of +2, bad of -2, and neutral words might have sentiment score of 0.</li>
+<li>The sum of the scores could give us the total sentiment score of the sentence.</li>
+<li>There is a small caveat with this approach. Take for example the following phrase: “I hate cars, I hate bikes, I hate planes, I hate train but I really love bicycles”. If we were to sum the sentiment, clearly it would be negative. But the phrase can be perfectly interpreted as the user really loving bicycles!</li>
+<li>Another example of this is when we use negative or positive words to mean just the opposite. For example, “the food was not good”.</li>
+</ul>
+<div id="using-tidytext-for-sentiment" class="section level2">
+<h2><span class="header-section-number">5.1</span> Using tidytext for sentiment</h2>
+<pre class="r"><code>library(dplyr)
+library(fortunes)
+library(tidytext)
+library(ggplot2)
+
+# Read data
+df = read.csv(&quot;https://raw.githubusercontent.com/selva86/datasets/master/phone_transcripts.csv&quot;, stringsAsFactors = F)
+df</code></pre>
+<pre><code>##         ID Recommend
+## 1 Caller 1       POS
+## 2 Caller 2       NEG
+## 3 Caller 3       NEG
+## 4 Caller 4       POS
+## 5 Caller 5       NEG
+## 6 Caller 6       POS
+## 7 Caller 7       POS
+##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         Comments
+## 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                The person was polite, prompt and knew how to take care of my issue and did so.
+## 2                                                                                                                                                                                                                                                                                                         The rep was dismissive in answering my questions about the refund. She handed me over to a customer serve rep who was helpful. With the fraudulent activity by the company in regard to my account and the inability to report the issue on line I am exteremy disappointed and am seriously thinking of terminating our relationship!
+## 3 Can you please have someone from Mr. Renault&#39;s Executive Staff call me. I am extremely dissatisfied by the service that I received and how poorly trained the representative was that I spoke with. In addition, several supervisors appeared me me that they just did not care. Only one person, Debra was kind and caring. Can you please have someone from Mr. Renault&#39;s office call me. I have been a card holder for over 31 years and have charged significant amounts of money. I actually really love using my ABC card. However, after last evening&#39;s experience I am incredible dissatisfied by the lack of service that I received.
+## 4                                                                                                                                                                                                                                                                                                                                                                                                           very polite, professional and responded positively to my needs. I received the service I requested and what I would have expected from any major credit card company. I don&#39;t feel this has much to do about my recommending or not.
+## 5                                                                                                                                                                                                                                                                                            Your first representative lied to me when she said that the new chip coming in your credit cards was &#39;required by a new law&#39; i asked to speak to a supervisor who could tell me what law this was. When I spoke to her, she admitted that it wasn&#39;t a law but told me there was no way to opt out of the new card with the chip. see my prior note.
+## 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Frank was pleasant to talk.
+## 7                                                                                I thought the customer service representative I spoke with was about the nicest, clearest, most efficient one I&#39;d ever spoken with in my life. She confirmed the problem I was having, validated my concern, fixed the problem, was easy to understand, and she was pleasant at all times. I think my blood pressure dropped during the phone call, a first. And, it sure didn&#39;t hurt that I was awarded 2,500 miles for my troubles. Not much, unless there was some sort of great signing bonus with miles. I don&#39;t usually recommend credit cards to people.</code></pre>
+<pre class="r"><code># Example of sentiment scores with tidytext package
+head(subset(tidytext::sentiments,lexicon == &#39;nrc&#39;))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   word      sentiment lexicon score
+##   &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;   &lt;int&gt;
+## 1 abacus    trust     nrc        NA
+## 2 abandon   fear      nrc        NA
+## 3 abandon   negative  nrc        NA
+## 4 abandon   sadness   nrc        NA
+## 5 abandoned anger     nrc        NA
+## 6 abandoned fear      nrc        NA</code></pre>
+<pre class="r"><code>head(subset(tidytext::sentiments,lexicon == &#39;bing&#39;))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   word       sentiment lexicon score
+##   &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;   &lt;int&gt;
+## 1 2-faced    negative  bing       NA
+## 2 2-faces    negative  bing       NA
+## 3 a+         positive  bing       NA
+## 4 abnormal   negative  bing       NA
+## 5 abolish    negative  bing       NA
+## 6 abominable negative  bing       NA</code></pre>
+<pre class="r"><code>head(subset(tidytext::sentiments,lexicon == &#39;AFINN&#39;))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   word       sentiment lexicon score
+##   &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;   &lt;int&gt;
+## 1 abandon    &lt;NA&gt;      AFINN      -2
+## 2 abandoned  &lt;NA&gt;      AFINN      -2
+## 3 abandons   &lt;NA&gt;      AFINN      -2
+## 4 abducted   &lt;NA&gt;      AFINN      -2
+## 5 abduction  &lt;NA&gt;      AFINN      -2
+## 6 abductions &lt;NA&gt;      AFINN      -2</code></pre>
+<pre class="r"><code>head(subset(tidytext::sentiments,lexicon == &#39;loughran&#39;))</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   word         sentiment lexicon  score
+##   &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;    &lt;int&gt;
+## 1 abandon      negative  loughran    NA
+## 2 abandoned    negative  loughran    NA
+## 3 abandoning   negative  loughran    NA
+## 4 abandonment  negative  loughran    NA
+## 5 abandonments negative  loughran    NA
+## 6 abandons     negative  loughran    NA</code></pre>
+<pre class="r"><code># Extraction of words in the dataset that contribute to sentiment
+AFINN = sentiments %&gt;% filter(lexicon == &quot;AFINN&quot;)
+
+df_sentiments = df %&gt;% 
+                unnest_tokens(word, Comments) %&gt;%       # extraction of words from comments column
+                anti_join(stop_words, by = &quot;word&quot;) %&gt;%  # remove stopwords
+                inner_join(AFINN, by = &quot;word&quot;)          # retain only sentiments
+                   
+df_sentiments</code></pre>
+<pre><code>##          ID Recommend         word sentiment lexicon score
+## 1  Caller 1       POS         care      &lt;NA&gt;   AFINN     2
+## 2  Caller 2       NEG      helpful      &lt;NA&gt;   AFINN     2
+## 3  Caller 2       NEG   fraudulent      &lt;NA&gt;   AFINN    -4
+## 4  Caller 2       NEG    inability      &lt;NA&gt;   AFINN    -2
+## 5  Caller 2       NEG disappointed      &lt;NA&gt;   AFINN    -2
+## 6  Caller 3       NEG dissatisfied      &lt;NA&gt;   AFINN    -2
+## 7  Caller 3       NEG         care      &lt;NA&gt;   AFINN     2
+## 8  Caller 3       NEG      charged      &lt;NA&gt;   AFINN    -3
+## 9  Caller 3       NEG  significant      &lt;NA&gt;   AFINN     1
+## 10 Caller 3       NEG         love      &lt;NA&gt;   AFINN     3
+## 11 Caller 3       NEG dissatisfied      &lt;NA&gt;   AFINN    -2
+## 12 Caller 3       NEG         lack      &lt;NA&gt;   AFINN    -2
+## 13 Caller 4       POS   positively      &lt;NA&gt;   AFINN     2
+## 14 Caller 5       NEG         lied      &lt;NA&gt;   AFINN    -2
+## 15 Caller 5       NEG     admitted      &lt;NA&gt;   AFINN    -1
+## 16 Caller 6       POS     pleasant      &lt;NA&gt;   AFINN     3
+## 17 Caller 7       POS    validated      &lt;NA&gt;   AFINN     1
+## 18 Caller 7       POS         easy      &lt;NA&gt;   AFINN     1
+## 19 Caller 7       POS     pleasant      &lt;NA&gt;   AFINN     3
+## 20 Caller 7       POS     pressure      &lt;NA&gt;   AFINN    -1
+## 21 Caller 7       POS         hurt      &lt;NA&gt;   AFINN    -2
+## 22 Caller 7       POS      awarded      &lt;NA&gt;   AFINN     3
+## 23 Caller 7       POS     troubles      &lt;NA&gt;   AFINN    -2
+## 24 Caller 7       POS    recommend      &lt;NA&gt;   AFINN     2</code></pre>
+<pre class="r"><code># Let&#39;s sum up the sentiments by CallerID
+df_sentiments_grouped = group_by(df_sentiments, ID) %&gt;%
+                        summarize(words = n()
+                                  , recommend = unique(Recommend)
+                                  , quotes = n_distinct(ID)
+                                  , sentiment = mean(score)
+                                  , any_negative_words = if(any(score&lt;0)){TRUE}else{FALSE})
+
+df_sentiments_grouped</code></pre>
+<pre><code>## # A tibble: 7 x 6
+##   ID       words recommend quotes sentiment any_negative_words
+##   &lt;chr&gt;    &lt;int&gt; &lt;chr&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;lgl&gt;             
+## 1 Caller 1     1 POS            1     2.00  F                 
+## 2 Caller 2     4 NEG            1    -1.50  T                 
+## 3 Caller 3     7 NEG            1    -0.429 T                 
+## 4 Caller 4     1 POS            1     2.00  F                 
+## 5 Caller 5     2 NEG            1    -1.50  T                 
+## 6 Caller 6     1 POS            1     3.00  F                 
+## 7 Caller 7     8 POS            1     0.625 T</code></pre>
+<pre class="r"><code># Plot
+g = ggplot(df_sentiments_grouped, aes(ID, sentiment, fill = sentiment &gt; 0))
+g = g + geom_bar(stat = &quot;identity&quot;, show.legend = FALSE)
+g = g + labs(y = &quot;Average AFINN sentiment&quot;, title = &quot;Sentiment by Caller&quot;)
+g = g + coord_flip()
+g</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-90-1.png" /><!-- --></p>
+</div>
+<div id="using-syuzhet-for-mood" class="section level2">
+<h2><span class="header-section-number">5.2</span> Using syuzhet for mood</h2>
+<pre class="r"><code>library(syuzhet)
+
+df$syuzhet = get_sentiment(df$Comments)
+df$syuzhet_bing = get_sentiment(df$Comments, method = &quot;bing&quot;)
+df$syuzhet_afinn = get_sentiment(df$Comments, method = &quot;afinn&quot;)
+df$syuzhet_nrc = get_sentiment(df$Comments, method = &quot;nrc&quot;)
+
+get_nrc_sentiment(df$Comments)</code></pre>
+<pre><code>##   anger anticipation disgust fear joy sadness surprise trust negative positive
+## 1     0            0       0    0   0       0        0     0        0        1
+## 2     2            0       2    0   1       2        0     3        4        2
+## 3     1            1       0    0   3       0        1     2        3        4
+## 4     0            1       0    0   0       0        0     2        0        5
+## 5     0            1       0    0   0       0        0     2        1        1
+## 6     0            1       0    0   1       0        1     2        0        3
+## 7     1            4       0    2   2       2        2     6        4        7</code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="classifying-texts-with-rtexttools" class="section level1">
+<h1><span class="header-section-number">6</span> Classifying texts with RTextTools</h1>
+<p>In this section we will come back to a supervised learning classification problem, were we have a collection of documents with a known predifined category. We want to classify these text using some of the known classification methods used in modelling.</p>
+<ul>
+<li>In the example below, instead of downloading the raw text and preprocessing it like we have done in many examples above, we have just read as data the feature space of the words that appear in the collection of documents we want to investigate. In this case we have loaded a DTM (document term matrix)</li>
+<li>Create a container holding different parts of the data for train and test</li>
+<li>With RTextTools we can use multiple ML algorithms</li>
+</ul>
+<pre class="r"><code>library(RTextTools)
+
+# Read data
+docs = read.csv(&quot;C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs3/names.txt&quot;, stringsAsFactors = F)
+docs[1:5,1:10]</code></pre>
+<pre><code>##   X1 X0 X0.1 X0.2 X0.3 X0.4 X0.5 X0.6 X0.7 X0.8
+## 1  2  0    0    0    0    0    0    0    0    0
+## 2  3  0    0    0    0    0    0    0    0    0
+## 3  4  0    0    0    0    0    0    0    0    0
+## 4  5  0    0    0    0    0    0    0    0    0
+## 5  6  0    0    1    0    0    0    0    0    0</code></pre>
+<pre class="r"><code># Convert to matrix to use RTextTools
+doc_matrix = as.matrix(docs[, -1])
+container = create_container(doc_matrix
+                             , docs[,1]
+                             , trainSize = 1:900
+                             , testSize = 901:1079
+                             , virgin = FALSE)
+
+# ML
+SVM = train_model(container, &quot;SVM&quot;)
+GLMNET = train_model(container, &quot;GLMNET&quot;)
+MAXENT = train_model(container, &quot;MAXENT&quot;)
+SLDA = train_model(container, &quot;SLDA&quot;)
+BOOSTING = train_model(container, &quot;BOOSTING&quot;)
+BAGGING = train_model(container, &quot;BAGGING&quot;)
+RF = train_model(container, &quot;RF&quot;)
+NNET = train_model(container, &quot;NNET&quot;)
+TREE = train_model(container, &quot;TREE&quot;)
+
+# PREDICT
+actuals = tail(docs[, 1], 179)
+
+SVM_CLASSIFY = classify_model(container, SVM)
+GLMNET_CLASSIFY = classify_model(container, GLMNET)
+MAXENT_CLASSIFY = classify_model(container, MAXENT)
+SLDA_CLASSIFY = classify_model(container, SLDA)
+BOOSTING_CLASSIFY = classify_model(container, BOOSTING)
+BAGGING_CLASSIFY = classify_model(container, BAGGING)
+RF_CLASSIFY = classify_model(container, RF)
+NNET_CLASSIFY = classify_model(container, NNET)
+TREE_CLASSIFY = classify_model(container, TREE)
+
+# LOWEST MISCLASSIFICATION RATE
+mean(as.character(SVM_CLASSIFY$SVM_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.03351955</code></pre>
+<pre class="r"><code>mean(as.character(GLMNET_CLASSIFY$GLMNET_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.06703911</code></pre>
+<pre class="r"><code>mean(as.character(MAXENT_CLASSIFY$MAXENT_LABEL) != actuals)</code></pre>
+<pre><code>## [1] NaN</code></pre>
+<pre class="r"><code>mean(as.character(SLDA_CLASSIFY$SLDA_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.05027933</code></pre>
+<pre class="r"><code>mean(as.character(BOOSTING_CLASSIFY$LOGITBOOST_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.05586592</code></pre>
+<pre class="r"><code>mean(as.character(BAGGING_CLASSIFY$BAGGING_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.1117318</code></pre>
+<pre class="r"><code>mean(as.character(RF_CLASSIFY$FORESTS_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.05027933</code></pre>
+<pre class="r"><code>mean(as.character(NNET_CLASSIFY$NNETWORK_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.424581</code></pre>
+<pre class="r"><code>mean(as.character(TREE_CLASSIFY$TREE_LABEL) != actuals)</code></pre>
+<pre><code>## [1] 0.2290503</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
