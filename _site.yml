@@ -1,0 +1,7 @@
+name: "Text Analytics"
+navbar:
+  title: "Text Analytics"
+  left:
+    - text: "Text Analytics"
+      href: index.html
+

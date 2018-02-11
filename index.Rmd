@@ -1,0 +1,721 @@
+---
+title: "Text analysis"
+author: "Jose Parreno Garcia"
+date: "February 2018"
+output: 
+  html_document:
+    toc: true # table of content true
+    depth: 6  # upto three depths of headings (specified by #, ##, ###, ####)
+    number_sections: true  ## if you want number sections at each table header
+    #theme: spacelab  # many options for theme, this one is my favorite.
+    #highlight: tango  # specifies the syntax highlighting style
+    keep_md: true
+---
+<style>
+body {
+text-align: justify}
+
+</style>
+
+<br>
+
+```{r set-options, echo=FALSE, cache=FALSE}
+options(width = 250)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source_path = getwd()
+```
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(knitr)
+```
+
+In this blog we will explore various concepts in text mining:
+
+* Scraping webpages and processing texts
+* Corpus, TDM, TF-IDF, Word cloud
+* Cosine similarity and Latent Semantic Analysis
+* Extracting topics and Latent Dirichlet Allocation
+* Sentiment scoring and tidytext and syuzhet
+* Classifying texts with RTextTools
+
+<br>
+
+# Scraping webpages and processing texts
+
+## Reading text files
+
+Text files are typically read using the **readLines()** function.
+
+```{r fig.width=7, fig.height=7}
+# Each text is saved in a character vector
+text = readLines("https://raw.githubusercontent.com/selva86/datasets/master/yoga.txt")
+text[1:5]
+```
+
+## Rvest package for HTML code in a webpage
+
+All webpages have a source HTML code behind it that you can view by right-clicking and viewing HTML source code. HTML is a semi-structured way of organising scripts, where you have tags that represent objects. Those tags can have also inner tags. So for example, in the image below you see there is a <head> and a <body> tag. Think of these as sections. Within <head> you would write all meta-data or meta-information, and with <body> you would write the bit of script that generates the webpage content.
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/1.PNG"))
+```
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/2.PNG"))
+```
+
+It could be possible to read the HTML code that forms a webpage using the **readLines()** but it could be massively messy. Check it out just below:
+
+```{r fig.width=7, fig.height=7}
+# Each text is saved in a character vector
+text = readLines("https://en.wikipedia.org/wiki/Yoga")
+head(text)
+```
+
+The best way to approach this is using the **Rvest** package. To **Rvest** you can specify what element from the webpage you want to extract. To dont necessarily want all of the HTML code, just the one that represents a table, or a paragraph or something in the webpage. An easy way to look for the code that represents an object in the webpage is by opening the HTML source code, hovering over different elements until you find the one you are looking for and then copying the HTML code.
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/3.PNG"))
+```
+
+So
+
+* On one side we have the page, where all the html code is saved as an XML object class
+* Then we copied the select code to the selector variable. This represents a paragrah in the webpage
+* We then extract the bit represented by the selector within the whole XML object class
+
+```{r fig.width=7, fig.height=7}
+library(dplyr)
+library(rvest)
+
+# Import page
+page = read_html("https://es.wikipedia.org/wiki/RStudio")
+page
+
+# Import select
+selector = "#mw-content-text > div > p:nth-child(2)"
+
+# Using CSS selector
+txt = page %>% html_node(css = selector) %>% html_text()
+txt
+```
+
+## Example: selecting all text from page - not selecting contents, images, etc
+
+```{r fig.width=7, fig.height=7}
+library(dplyr)
+
+# Import page
+page = read_html("https://es.wikipedia.org/wiki/Valencia")
+
+# Extract info that are within the paragraph tags in the HTML code (denotes by "p")
+# The only problem you can see if that there are some minor extra HTML codes and notations and things that we might want to get rid off if we only want the text
+txt = page %>% html_nodes("p") %>% html_text()
+head(txt, 1)
+
+# Cleaning text with regexp 
+# remove HTML code
+pattern = "</?\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)"
+txt1 = stringr::str_replace_all(txt, pattern,"")
+
+#  remove extra space between words
+txt1 = stringr::str_wrap(txt1)
+
+# remove citations
+txt1 = stringr::str_replace_all(txt1, "\\[.*\\]", "")
+
+head(txt1, 1)
+
+```
+
+<br>
+
+# Corpus, TDM, TF-IDF, Word cloud
+
+## Corpus
+
+A corpus is a collection of text documents. In comparison with the above where we worked with strings or character vectors, a corpus can be though of a library. Say you had 300 books, then a corpus will have an object for all of those 300 books. Then, we would be able to break down those individual elements in the corpus to sentences/words/etc.
+
+The example below:
+
+* We read a text file that breaks the text into lines and saves it as a character vector
+* Then we create a corpus using the vector (we could also load a directory full of files with **Corpus(DirSource())**).
+* This corpus contains 372 "documents" -> in this case, 372 lines. Each sentence in this case is treated as a document.
+* If you want more details about each document (in this case sentence), you  can always use the **inspect()** function.
+* As you can see using **inspect()**, there is an element of metadata for each document. If you wish, you can edit this too.
+
+```{r fig.width=7, fig.height=7}
+library(tm)
+
+# Read text
+char_vec = readLines("https://raw.githubusercontent.com/selva86/datasets/master/yoga_wiki.txt")
+
+# Create Corpus
+cp = Corpus(VectorSource(char_vec))
+cp
+
+# Different ways of inspecting the document
+inspect(cp[[6]])
+cp[[15]]$content
+as.character(cp[[15]])
+
+```
+
+### Cleaning the corpus
+
+* The **tm()** package offer a number of transformations that we could directly apply to the text. Examples in the code.
+* Given that these transformations are nothing more than functions, we could also build our own transformers!
+
+```{r fig.width=7, fig.height=7}
+library(SnowballC)
+
+# Transformations in tm package
+getTransformations()
+
+# Removing html transformer
+pattern = "</?\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)"
+rmHTML = function(x){gsub(pattern, "", x)}
+
+# Applying transformations
+cp_nohtml = tm_map(cp, content_transformer(rmHTML))
+inspect(cp_nohtml[[15]])
+
+# Removing punctuation
+cp_noPun = tm_map(cp_nohtml, content_transformer(removePunctuation))
+inspect(cp_noPun[[15]])
+
+# All to lower case
+cp_lower = tm_map(cp_noPun, content_transformer(tolower))
+inspect(cp_lower[[15]])
+
+# Removing stopwords
+tm::stopwords()
+cp_noStopwords = tm_map(cp_lower, content_transformer(removeWords), stopwords())
+inspect(cp_noStopwords[[15]])
+
+# Removing whitespace
+cp_noSpace = tm_map(cp_noStopwords, content_transformer(stripWhitespace))
+inspect(cp_noSpace[[15]])
+
+# Trailing and leading spaces
+cp_clean = tm_map(cp_noSpace, content_transformer(trimws))
+inspect(cp_clean[[15]])
+
+# Stemming
+cp_clean_stem = tm_map(cp_clean, stemDocument)
+inspect(cp_clean_stem[[15]])
+```
+
+## Term Document Matrix
+
+* Once we have cleaned the text using some of the possible text transformations that **tm** package offers, we are ready to create the Corpus.
+* The Corpus will hold in each "row"/"document", the sentences we cleaned.
+* The next thing we want to do is analyse the Corpus as a whole. One way to do that is creating a **Term Document Matrix**. This will create a row for every possible word in all the documents, a column for every document (in this case 3 documents), and then the count of how many times each word appears in each document.
+* With this, we can then run different statistics like looking for the most frequent words.
+* If you look at the matrix, you can figure out that the matrix is pretty much filled with 0s! That makes sense because words wont appear in all documents! We could clean a bit more this matrix by removing any Sparse terms, ie, remove words that very rarely appear across all documents. In fact, if you look at the summary of the new matrix, you will see that the **min** is 4, which means that we have removed terms that appear in less than 4 documents.
+
+```{r fig.width=7, fig.height=7}
+# We are happy with the transformations. Let's finally create the Corpus
+# cp_complete = Corpus(VectorSource(cp_clean_stem))
+
+# Create term document matrix and find frequent words
+tdm = TermDocumentMatrix(cp_clean_stem)
+tdm
+
+m = as.matrix(tdm)
+m[1:5,1:20]
+
+dim(m)
+
+# Find frequent terms
+findFreqTerms(tdm, lowfreq = 10)
+
+# Remove sparse terms -> dimensions clearly reduced from the words terms
+tdm2 = removeSparseTerms(tdm, 0.99)
+m_2 = as.matrix(tdm2)
+dim(m_2)
+summary(rowSums(m_2))
+
+```
+
+## TF - IDF
+
+We have seen above how to compute the Term Document Matrix.
+
+* With this we could start doing analysis based on the counts of words overall, or the count of words per document. Being valuable, this is a very simple approach on how to analyse text. 
+* In addition, we did remove some sparse terms, but we can't assure that just because they dont appear in many documents, they are not important. Maybe one of those sparse terms, appears multiple times in a single document, making it very important in that particular instance.
+
+A possible way to add another layer of processing to the TDM is by introducing the concept of **TF-IDF -> Term Frequency - Inverse Document Frequency**.
+
+* TF-IDF works with the assumption that rare words shoud be given much greater importance than common words. For example, if we hadn't removed stop words in one of our preprocessing steps, probably the word "and" would appear multiple times in pretty much all documents. Does that mean that "and" is something important if we are to do analysis? I would say the answer is no.
+* TF-IDF would down weight these common elements by multiplying the *frequency* term (TF) with the *inverse frequency* term (IDF)
+* There are multiple forms of the TF-IDF methodology, so do check out different implementation formulas.
+* Check out the output of m_3 in R. In this case, instead of only having the count of times a term appears in the document, we have the relative importance of that word compared to all documents using the **weightTfIdf** function.
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/4.PNG"))
+```
+
+
+```{r fig.width=7, fig.height=7}
+# TF-DF
+tdm_w = weightTfIdf(tdm, normalize = FALSE)
+
+m_3 = as.matrix(tdm_w)
+
+m_3[1:5,1:10]
+
+dim(m_3)
+
+```
+
+### WordCloud
+
+A WordCloud is just a graphical representation of a term and a numeric vector. For example, if we were to build a word cloud with the initial TDM, words  with highest frequency would appear bigger. If we are to apply it to the TF-IDF, then words with higher relative importance would appear bigger.
+
+### Wordcloud type 1
+ 
+```{r fig.width=7, fig.height=7}
+library(wordcloud)
+
+# Create word cloud
+word.freq = sort(rowSums(m_3), decreasing = T)
+
+# color.palette
+pal = RColorBrewer::brewer.pal(8, "Dark2")
+
+# Plot word cloud
+wordcloud(words = names(word.freq)
+          , freq = word.freq
+          , random.order = F
+          , colors = pal
+          , max.words = 70)
+
+```
+
+## Wordcloud type 2
+ 
+```{r fig.width=7, fig.height=7}
+library(wordcloud2)
+
+# Word freq vect0r
+word.freq = sort(rowSums(m_3), decreasing = T)
+
+# Dataframe
+df = as.data.frame(word.freq)
+df$word = rownames(df)
+colnames(df) = c("freq","word")
+df = df[,c("word","freq")]
+
+# plot word cloud
+wordcloud2(head(df,30), color = pal)
+
+```
+
+# Document similarity: Cosine similarity and Latent Semantic Analysis
+
+The previous section was all about text processing and we used the **tm** package for it. In this section we will look at how to group documents that are similar.
+
+## Cosine Similarity
+
+A possible way of matching similar documents is based on the number of common words between documents, but this has some draw backs. Cosine similarity solves some of these drawbacks. Let's understand this with the example below:
+
+* We have 3 documents based on 2 star cricket players (Sachin, Dhoni)
+* Our aim is to quantitatively estimate which documents are more similar
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/5.PNG"))
+```
+
+### Approach only by number of common words
+
+If we go only with the approach of number of common words, we could end up with the result shown below. 
+
+* In this case, the 2 largest documents will have the most common words: Dhoni = 10 + Cricket = 50 + Sachin = 10. The question is, are they really the most similar documents?
+* The answer is no, because the smaller set contains, for example, many more times the word "Dhoni" than the Sachin-large-dataset, meaning that probably, the smaller set is much more representative or similar to the Dhoni-large-dataset.
+* We can solve this drawback by introducing cosine similarity.
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/6.PNG"))
+```
+
+### Approach with Cosine Similarity
+
+* Imagine we project the documents in a X-dimensional space, in this case, let's represent in a 3D because we are looking at 3 different words.
+* Each document will be mapped as a vector corresponding to the number of times the each word (axis) appear in the doc.
+* You can clearly see that the small set Dd is incredibly similar in terms of angle to DD. 
+* This means that we can calculate the COSINE of each document. The closer the documents are, the similar they are.
+* We are not interested in the magnitude of the vector, only on the positioning of in the X-dimensional space.
+
+```{r echo=FALSE, fig.width=3, fig.height=3}
+include_graphics(paste0(source_path,"/images/7.PNG"))
+```
+
+```{r fig.width=7, fig.height=7}
+library(tm)
+library(lsa)
+
+# Create corpus
+wiki_docs = Corpus(DirSource("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs"))
+wiki_docs
+
+# PREPROCESSING
+# Stopwords
+stpwords = readLines("https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long")
+wiki_docs = tm_map(wiki_docs, removeWords, stpwords)
+
+# Number
+wiki_docs = tm_map(wiki_docs, removeNumbers)
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, removePunctuation)
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, "\n", " ")}))
+
+# TERM DOCUMENT MATRIX
+tdm_wiki = TermDocumentMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = FALSE))
+
+m = as.matrix(tdm_wiki)
+
+# COSINE SIMILARITY
+csn = lsa::cosine(m)
+csn
+
+```
+
+## Latent Semantic Analysis
+
+Latent Semantic Analysis tries to uncover the latent relationships between documents based on co-ocurrence of words. So, if 2 documents have some meaningful words in common, there must be some common theme. LSA accomplishes this using singular value decomposition (SVD). To put this in simple words, SVD reduces the dimensions of the TDM by compressing the information into only a few columns (something similar to PCA). Compared to PCA, SVD provides 3 matrices as output:
+
+* One for documents
+* One for terms
+* One to decide how many dimensions could be useful
+* Lets look at an example with documents on political personalities and sports
+
+```{r fig.width=7, fig.height=7}
+# File names
+n = list.files("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs1")
+
+# Create corpus
+wiki_docs = Corpus(DirSource("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs1"))
+wiki_docs
+
+# PREPROCESSING
+# Stopwords
+wiki_docs = tm_map(wiki_docs, content_transformer(removeWords), c(lsa::stopwords_en))
+
+# Number
+wiki_docs = tm_map(wiki_docs, content_transformer(removeNumbers))
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, content_transformer(removePunctuation))
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, "\n", " ")}))
+
+# TERM DOCUMENT MATRIX
+tdm_wiki = TermDocumentMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = stpwords
+                                                        , weighting = weightTfIdf))
+
+# RUN LSA
+lsa_out = lsa::lsa(tdm_wiki, dims = lsa::dimcalc_share())
+
+# reduced information for the terms
+lsa_out$tk[1:5,]
+
+# reduced information for the documents
+rownames(lsa_out$dk) = n
+lsa_out$dk
+
+# information contributed by the dimensions
+lsa_out$sk
+```
+
+
+```{r fig.width=7, fig.height=7}
+# Using TK and DK to cluster the documents
+
+# DOCS df
+docs_mat = lsa_out$dk[,c(1:2)]
+plotmat_docs_df = as.data.frame(docs_mat)
+colnames(plotmat_docs_df) = c("Dim1","Dim2")
+
+# KMEANS to cluster
+set.seed(100)
+clus = kmeans(plotmat_docs_df, 3)
+plotmat_docs_df$cluster = factor(clus$cluster)
+plotmat_docs_df
+
+# Plot
+library(ggplot2)
+library(ggrepel)
+
+g = ggplot(plotmat_docs_df, aes(x = Dim1, y = Dim2))
+g = g + geom_point(size = 2, aes(color = cluster))
+g = g + ggrepel::geom_text_repel(aes(label = rownames(plotmat_docs_df))
+                                 , data = plotmat_docs_df, size = 3)
+g = g + theme_bw()
+g
+
+```
+
+<br>
+
+# Extracting Topis with Latent Dirichlet Allocation
+
+In the previous section, we managed to understand a couple of methods that could help us group documents together. The next step to take is to understand the **topics** that are being discussed in these documents/groups of documents. 
+
+* LDA is an unsupervised algorithm
+* LDA is a method that can start related elements like "water", "ice", "blue" as a similar topic.
+* It works best under the assumption that a document is a mixture of several topics and at the same time, each topic is a mixture of certain keywords
+* LDA can then assign probabilities/proportions to each one document based on the topics.
+* Example with documents on food, sports and personalities.
+
+```{r fig.width=7, fig.height=7}
+# File names
+n = list.files("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs2")
+# n = cbind(n,seq(1, length(n), 1))
+
+# Create corpus
+wiki_docs = Corpus(DirSource("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs2"))
+wiki_docs
+
+# PREPROCESSING
+# To lower
+wiki_docs = tm_map(wiki_docs, content_transformer(tolower))
+
+# Stopwords
+stpwords = readLines("https://raw.githubusercontent.com/selva86/datasets/master/stopwords_long")
+wiki_docs = tm_map(wiki_docs, content_transformer(removeWords), c(lsa::stopwords_en, stpwords))
+
+# Number
+wiki_docs = tm_map(wiki_docs, content_transformer(removeNumbers))
+
+# Punctuation
+wiki_docs = tm_map(wiki_docs, content_transformer(removePunctuation))
+
+# Whitespaces
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_wrap(x)}))
+wiki_docs = tm_map(wiki_docs, content_transformer(function(x){stringr::str_replace_all(x, "\n", " ")}))
+
+# DOCUMENT TERM MATRIX
+dtm = DocumentTermMatrix(wiki_docs, control = list(removePunctuation = TRUE
+                                                        , removeNumbers = TRUE
+                                                        , stopwords = TRUE
+                                                        ))
+
+# LDA
+library(topicmodels)
+
+# Parameters
+burnin = 4000
+iter = 2000
+thin = 500
+seed = list(2003,5,63,100001,765)
+nstart = 5
+best = TRUE
+k = 4 #number topics
+
+# Run LDA
+res = LDA(dtm, k, method = "Gibbs"
+          , control = list(nstart = nstart
+                           , seed = seed
+                           , best = best
+                           , burnin = burnin
+                           , iter = iter
+                           , thin = thin))
+
+# Number of topics in each document
+res_topics = as.matrix(topics(res))
+res_topics
+rownames(res_topics) = n
+
+# Top 30 terms
+res_terms = as.matrix(terms(res, 30))
+res_terms
+
+# Show topic probabilities
+res_topicProbs = as.data.frame(res@gamma)
+cbind(rownames(res_topics), res_topicProbs)
+
+# Visualise using a heatmap
+library(d3heatmap)
+library(RColorBrewer)
+
+topic_probs = data.matrix(res_topicProbs)
+colnames(topic_probs) = c("Sports","Food","Politics","India-Politics")
+rownames(topic_probs) = rownames(res_topics)
+
+
+d3heatmap(topic_probs, colors = brewer.pal(9, "Greens")
+          , scale = "column", margins  = c(5,5)
+          , dendrogram = "row", k_row = 5, cexRow = 0.75)
+
+```
+
+<br>
+
+# Sentiment scoring and tidytext and syuzhet
+
+So far we have been able to do some basic text analysis and extraction/grouping of topics within a set of documents. This would be useful if we were to apply it to social media, but it would be even more useful to try to extract sentiment, in other words, trying to understand opinions.
+
+Let's see an example where we classify the sentiment of phone transcripts. 
+
+* The main idea is to capture the positive and negative sentiment through the words. 
+* Words have a related sentiment score. For example, good may have a score of +2, bad of -2, and neutral words might have sentiment score of 0.
+* The sum of the scores could give us the total sentiment score of the sentence.
+* There is a small caveat with this approach. Take for example the following phrase: "I hate cars, I hate bikes, I hate planes, I hate train but I really love bicycles". If we were to sum the sentiment, clearly it would be negative. But the phrase can be perfectly interpreted as the user really loving bicycles!
+* Another example of this is when we use negative or positive words to mean just the opposite. For example, "the food was not good".
+
+## Using tidytext for sentiment
+
+```{r fig.width=7, fig.height=7}
+library(dplyr)
+library(fortunes)
+library(tidytext)
+library(ggplot2)
+
+# Read data
+df = read.csv("https://raw.githubusercontent.com/selva86/datasets/master/phone_transcripts.csv", stringsAsFactors = F)
+df
+
+# Example of sentiment scores with tidytext package
+head(subset(tidytext::sentiments,lexicon == 'nrc'))
+head(subset(tidytext::sentiments,lexicon == 'bing'))
+head(subset(tidytext::sentiments,lexicon == 'AFINN'))
+head(subset(tidytext::sentiments,lexicon == 'loughran'))
+
+# Extraction of words in the dataset that contribute to sentiment
+AFINN = sentiments %>% filter(lexicon == "AFINN")
+
+df_sentiments = df %>% 
+                unnest_tokens(word, Comments) %>%       # extraction of words from comments column
+                anti_join(stop_words, by = "word") %>%  # remove stopwords
+                inner_join(AFINN, by = "word")          # retain only sentiments
+                   
+df_sentiments
+
+# Let's sum up the sentiments by CallerID
+df_sentiments_grouped = group_by(df_sentiments, ID) %>%
+                        summarize(words = n()
+                                  , recommend = unique(Recommend)
+                                  , quotes = n_distinct(ID)
+                                  , sentiment = mean(score)
+                                  , any_negative_words = if(any(score<0)){TRUE}else{FALSE})
+
+df_sentiments_grouped
+
+# Plot
+g = ggplot(df_sentiments_grouped, aes(ID, sentiment, fill = sentiment > 0))
+g = g + geom_bar(stat = "identity", show.legend = FALSE)
+g = g + labs(y = "Average AFINN sentiment", title = "Sentiment by Caller")
+g = g + coord_flip()
+g
+```
+
+## Using syuzhet for mood
+
+```{r fig.width=7, fig.height=7}
+library(syuzhet)
+
+df$syuzhet = get_sentiment(df$Comments)
+df$syuzhet_bing = get_sentiment(df$Comments, method = "bing")
+df$syuzhet_afinn = get_sentiment(df$Comments, method = "afinn")
+df$syuzhet_nrc = get_sentiment(df$Comments, method = "nrc")
+
+get_nrc_sentiment(df$Comments)
+```
+
+<br>
+
+# Classifying texts with RTextTools
+
+In this section we will come back to a supervised learning classification problem, were we have a collection of documents with a known predifined category. We want to classify these text using some of the known classification methods used in modelling.
+
+* In the example below, instead of downloading the raw text and preprocessing it like we have done in many examples above, we have just read as data the feature space of the words that appear in the collection of documents we want to investigate. In this case we have loaded a DTM (document term matrix)
+* Create a container holding different parts of the data for train and test
+* With RTextTools we can use multiple ML algorithms
+
+```{r fig.width=7, fig.height=7}
+library(RTextTools)
+
+# Read data
+docs = read.csv("C:/Users/garciaj/Desktop/Udemy/7_Text_analysis/docs3/names.txt", stringsAsFactors = F)
+docs[1:5,1:10]
+
+# Convert to matrix to use RTextTools
+doc_matrix = as.matrix(docs[, -1])
+container = create_container(doc_matrix
+                             , docs[,1]
+                             , trainSize = 1:900
+                             , testSize = 901:1079
+                             , virgin = FALSE)
+
+# ML
+SVM = train_model(container, "SVM")
+GLMNET = train_model(container, "GLMNET")
+MAXENT = train_model(container, "MAXENT")
+SLDA = train_model(container, "SLDA")
+BOOSTING = train_model(container, "BOOSTING")
+BAGGING = train_model(container, "BAGGING")
+RF = train_model(container, "RF")
+NNET = train_model(container, "NNET")
+TREE = train_model(container, "TREE")
+
+# PREDICT
+actuals = tail(docs[, 1], 179)
+
+SVM_CLASSIFY = classify_model(container, SVM)
+GLMNET_CLASSIFY = classify_model(container, GLMNET)
+MAXENT_CLASSIFY = classify_model(container, MAXENT)
+SLDA_CLASSIFY = classify_model(container, SLDA)
+BOOSTING_CLASSIFY = classify_model(container, BOOSTING)
+BAGGING_CLASSIFY = classify_model(container, BAGGING)
+RF_CLASSIFY = classify_model(container, RF)
+NNET_CLASSIFY = classify_model(container, NNET)
+TREE_CLASSIFY = classify_model(container, TREE)
+
+# LOWEST MISCLASSIFICATION RATE
+mean(as.character(SVM_CLASSIFY$SVM_LABEL) != actuals)
+mean(as.character(GLMNET_CLASSIFY$GLMNET_LABEL) != actuals)
+mean(as.character(MAXENT_CLASSIFY$MAXENT_LABEL) != actuals)
+mean(as.character(SLDA_CLASSIFY$SLDA_LABEL) != actuals)
+mean(as.character(BOOSTING_CLASSIFY$LOGITBOOST_LABEL) != actuals)
+mean(as.character(BAGGING_CLASSIFY$BAGGING_LABEL) != actuals)
+mean(as.character(RF_CLASSIFY$FORESTS_LABEL) != actuals)
+mean(as.character(NNET_CLASSIFY$NNETWORK_LABEL) != actuals)
+mean(as.character(TREE_CLASSIFY$TREE_LABEL) != actuals)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
